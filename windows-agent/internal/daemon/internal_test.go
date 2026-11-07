@@ -10,6 +10,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
@@ -38,6 +39,9 @@ func TestRestart(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			addrDir := t.TempDir()
+			c, err := securefiles.Open(addrDir)
+			require.NoError(t, err, "Setup: could not create custodian")
+			defer c.Close()
 
 			registerer := func(context.Context, bool) *grpc.Server {
 				server := grpc.NewServer()
@@ -45,7 +49,7 @@ func TestRestart(t *testing.T) {
 				return server
 			}
 
-			d := New(ctx, registerer, addrDir)
+			d := New(ctx, registerer, c)
 
 			serveErr := make(chan error)
 

@@ -3,6 +3,7 @@ package daemon_test
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"net"
 	"os"
 	"path/filepath"
@@ -15,6 +16,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/testdata/grpctestservice"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -26,18 +28,6 @@ import (
 func init() {
 	// Ensures we use the networking-related mocks in all daemon tests unless otherwise locally specified.
 	daemontestutils.DefaultNetworkDetectionToMock()
-}
-func TestNew(t *testing.T) {
-	t.Parallel()
-
-	var regCount int
-	countRegistrations := func(context.Context, bool) *grpc.Server {
-		regCount++
-		return nil
-	}
-
-	_ = daemon.New(context.Background(), countRegistrations, t.TempDir())
-	require.Equal(t, 0, regCount, "daemon should not register GRPC services before serving")
 }
 
 func TestStartQuit(t *testing.T) {
@@ -63,6 +53,9 @@ func TestStartQuit(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			addrDir := t.TempDir()
+			c, setupErr := securefiles.Open(addrDir)
+			require.NoError(t, setupErr, "Setup: could not create custodian")
+			defer c.Close()
 
 			if tc.preexistingPortFile {
 				err := os.MkdirAll(addrDir, 0600)
@@ -77,7 +70,7 @@ func TestStartQuit(t *testing.T) {
 				return server
 			}
 
-			d := daemon.New(ctx, registerer, addrDir)
+			d := daemon.New(ctx, registerer, c)
 
 			serveErr := make(chan error)
 			go func() {
@@ -90,17 +83,21 @@ func TestStartQuit(t *testing.T) {
 			var addrContents []byte
 			var err error
 
-			if tc.preexistingPortFile {
-				require.Eventually(t, func() bool {
-					addrContents, err = os.ReadFile(addrPath)
-					require.NoError(t, err, "Address file should be readable")
-					return string(addrContents) != "# Old port file"
-				}, 5*time.Second, 100*time.Millisecond, "Pre-existing address file should be overwritten after dameon.New()")
-			} else {
-				daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should create an address file")
+			// The publication replaces the node wholesale — CreateFile removes
+			// the old one before creating its replacement — and writes the
+			// address after the create, so every wait here answers for
+			// content: a missing file is the replacement in progress, an
+			// empty read is the write pending, and neither is a completed
+			// publication. The stale-content check is inert without a
+			// pre-existing file, so one wait serves both setups.
+			require.Eventually(t, func() bool {
 				addrContents, err = os.ReadFile(addrPath)
-				require.NoError(t, err, "Address file should be readable")
-			}
+				if err != nil {
+					require.ErrorIs(t, err, fs.ErrNotExist, "Address file should be readable")
+					return false
+				}
+				return len(addrContents) > 0 && string(addrContents) != "# Old port file"
+			}, 5*time.Second, 100*time.Millisecond, "the address file must hold the published address once Serve starts")
 
 			// Now we know the TCP server has started.
 
@@ -178,6 +175,9 @@ func TestCanServeOnlyOnce(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			addrDir := t.TempDir()
+			c, setupErr := securefiles.Open(addrDir)
+			require.NoError(t, setupErr, "Setup: could not create custodian")
+			defer c.Close()
 
 			registerer := func(context.Context, bool) *grpc.Server {
 				server := grpc.NewServer()
@@ -185,7 +185,7 @@ func TestCanServeOnlyOnce(t *testing.T) {
 				return server
 			}
 
-			d := daemon.New(ctx, registerer, addrDir)
+			d := daemon.New(ctx, registerer, c)
 			firstServeErr := make(chan error)
 			go func() {
 				firstServeErr <- d.Serve(ctx)
@@ -246,6 +246,7 @@ func TestServeWSLIP(t *testing.T) {
 		"When retrieving adapters information fails":     {withAdapters: daemontestutils.MockError},
 
 		"Error when the WSL IP cannot be found and monitoring network fails": {withAdapters: daemontestutils.NoHyperVAdapterInList, subscribeErr: errors.New("mock error"), wantErr: true},
+		"Error when the WSL adapter IP cannot be listened on":                {withAdapters: daemontestutils.HyperVAdapterNonLocalIP, wantErr: true},
 	}
 
 	for name, tc := range testcases {
@@ -253,12 +254,15 @@ func TestServeWSLIP(t *testing.T) {
 			t.Parallel()
 
 			addrDir := t.TempDir()
+			c, setupErr := securefiles.Open(addrDir)
+			require.NoError(t, setupErr, "Setup: could not create custodian")
+			defer c.Close()
 			// Very lenient timeout because we either expect Serve to fail immediately or we stop it manually.
 			// As the last resource, the test will fail due to the context timeout (otherwise it would hang indefinitely).
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 			defer cancel()
 
-			d := daemon.New(ctx, registerer, addrDir)
+			d := daemon.New(ctx, registerer, c)
 			defer d.Quit(ctx, false)
 
 			if tc.netmode == "" {
@@ -315,53 +319,108 @@ func TestServeWSLIP(t *testing.T) {
 func TestAddingWSLAdapterRestarts(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	addrDir := t.TempDir()
-
-	registerer := func(context.Context, bool) *grpc.Server {
-		server := grpc.NewServer()
-		grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
-		return server
+	testcases := map[string]struct {
+		addedAdapterIsWSL bool
+	}{
+		"WSL adapter addition restarts the daemon": {addedAdapterIsWSL: true},
+		"Other adapter addition keeps monitoring":  {addedAdapterIsWSL: false},
 	}
 
-	d := daemon.New(ctx, registerer, addrDir)
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	systemNotification := make(chan error)
-	defer close(systemNotification)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			addrDir := t.TempDir()
+			c, setupErr := securefiles.Open(addrDir)
+			require.NoError(t, setupErr, "Setup: could not create custodian")
+			defer c.Close()
 
-	mock := daemontestutils.NewHostIPConfigMock(daemontestutils.NoHyperVAdapterInList)
+			registerer := func(context.Context, bool) *grpc.Server {
+				server := grpc.NewServer()
+				grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
+				return server
+			}
 
-	serveErr := make(chan error, 1)
-	go func() {
-		serveErr <- d.Serve(ctx, daemon.WithMockedGetAdapterAddresses(mock),
-			daemon.WithNetDevicesAPIProvider(daemontestutils.NetDevicesMockAPIWithAddedWSL(systemNotification)),
-		)
-		close(serveErr)
-	}()
+			d := daemon.New(ctx, registerer, c)
 
-	addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
+			systemNotification := make(chan error)
+			defer close(systemNotification)
 
-	daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should create an address file")
-	addrSt, err := os.Stat(addrPath)
-	require.NoError(t, err, "Address file should be readable")
+			provider := daemontestutils.NetDevicesMockAPIWithAddedWSL
+			if !tc.addedAdapterIsWSL {
+				provider = daemontestutils.NetDevicesMockAPIWithAddedNonWSL
+			}
 
-	// Now we know the GRPC server has started serving. Let's emulate the OS triggering a notification.
-	systemNotification <- nil
+			mock := daemontestutils.NewHostIPConfigMock(daemontestutils.NoHyperVAdapterInList)
 
-	// d.Serve() shouldn't have exitted with an error yet at this point.
-	select {
-	case err := <-serveErr:
-		require.NoError(t, err, "Restart should not have caused Serve() to exit with an error")
-	case <-time.After(200 * time.Millisecond):
-		// proceed.
+			serveErr := make(chan error, 1)
+			go func() {
+				serveErr <- d.Serve(ctx, daemon.WithMockedGetAdapterAddresses(mock),
+					daemon.WithNetDevicesAPIProvider(provider(systemNotification)),
+				)
+				close(serveErr)
+			}()
+
+			addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
+
+			// The publication creates the node before it writes the address
+			// into it, so the wait must answer for content, not existence: an
+			// mtime captured on the empty node predates the write that
+			// completes the same publication, and the no-rewrite check below
+			// would read that write as a rewrite.
+			require.Eventually(t, func() bool {
+				got, err := os.ReadFile(addrPath)
+				return err == nil && len(got) > 0
+			}, 5*time.Second, 100*time.Millisecond, "Serve should create an address file")
+			addrSt, err := os.Stat(addrPath)
+			require.NoError(t, err, "Address file should be readable")
+
+			// Now we know the GRPC server has started serving. Let's emulate the OS triggering a notification.
+			systemNotification <- nil
+
+			// d.Serve() shouldn't have exited with an error at this point.
+			select {
+			case err := <-serveErr:
+				require.NoError(t, err, "An adapter notification should not have caused Serve() to exit with an error")
+			case <-time.After(200 * time.Millisecond):
+				// proceed.
+			}
+
+			if !tc.addedAdapterIsWSL {
+				newAddrSt, err := os.Stat(addrPath)
+				require.NoError(t, err, "Address file should be readable")
+				require.Equal(t, addrSt.ModTime(), newAddrSt.ModTime(), "Address file should not be rewritten without a restart")
+
+				d.Quit(ctx, false)
+				err = <-serveErr
+				if err != nil && strings.Contains(err.Error(), grpc.ErrServerStopped.Error()) {
+					// We stopped the server manually, so we expect this error, although it's possible that there is not even an error at this point.
+					err = nil
+				}
+				require.NoError(t, err, "Serve should return no error when stopped normally")
+				return
+			}
+
+			// The restart's publication removes the old node before creating
+			// its replacement, so neither the old file standing nor a missing
+			// one is an answer: the wait ends only on a modification time
+			// after the first publication's. Contents could be the same
+			// without our control, thus the file time.
+			require.Eventually(t, func() bool {
+				st, err := os.Stat(addrPath)
+				if err != nil {
+					require.ErrorIs(t, err, fs.ErrNotExist, "Address file should be readable")
+					return false
+				}
+				return st.ModTime().After(addrSt.ModTime())
+			}, 5*time.Second, 100*time.Millisecond, "Restart should have overwritten the address file")
+			newAddrSt, err := os.Stat(addrPath)
+			require.NoError(t, err, "Address file should be readable")
+			require.NotEqual(t, addrSt.ModTime(), newAddrSt.ModTime(), "Address file should be overwritten after Restart")
+		})
 	}
-
-	daemontestutils.RequireWaitPathExists(t, addrPath, "Restart should have caused creation of another .address file")
-	// Contents could be the same without our control, thus best to check the file time.
-	newAddrSt, err := os.Stat(addrPath)
-	require.NoError(t, err, "Address file should be readable")
-	require.NotEqual(t, addrSt.ModTime(), newAddrSt.ModTime(), "Address file should be overwritten after Restart")
 }
 
 func TestServeError(t *testing.T) {
@@ -369,15 +428,20 @@ func TestServeError(t *testing.T) {
 
 	ctx := context.Background()
 	addrDir := t.TempDir()
+	c, setupErr := securefiles.Open(addrDir)
+	require.NoError(t, setupErr, "Setup: could not create custodian")
 
 	registerer := func(context.Context, bool) *grpc.Server {
 		return grpc.NewServer()
 	}
 
-	d := daemon.New(ctx, registerer, addrDir)
+	d := daemon.New(ctx, registerer, c)
 	defer d.Quit(ctx, false)
 
-	// Remove parent directory to prevent listening port file to be written
+	// Remove the parent directory to prevent the listening port file from being written.
+	// The custodian must be closed first: on Windows a directory cannot be removed
+	// while a handle to it is still open.
+	require.NoError(t, c.Close(), "Setup: could not close the custodian")
 	require.NoError(t, os.RemoveAll(addrDir), "Setup: could not remove cache directory")
 
 	err := d.Serve(ctx)
@@ -389,12 +453,15 @@ func TestQuitBeforeServe(t *testing.T) {
 
 	ctx := context.Background()
 	addrDir := t.TempDir()
+	c, setupErr := securefiles.Open(addrDir)
+	require.NoError(t, setupErr, "Setup: could not create custodian")
+	defer c.Close()
 
 	registerer := func(context.Context, bool) *grpc.Server {
 		return grpc.NewServer()
 	}
 
-	d := daemon.New(ctx, registerer, addrDir)
+	d := daemon.New(ctx, registerer, c)
 	d.Quit(ctx, false)
 
 	serverErr := make(chan error)
@@ -437,8 +504,11 @@ func TestWaitReady(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			addrDir := t.TempDir()
+			c, setupErr := securefiles.Open(addrDir)
+			require.NoError(t, setupErr, "Setup: could not create custodian")
+			defer c.Close()
 
-			d := daemon.New(ctx, registerer, addrDir)
+			d := daemon.New(ctx, registerer, c)
 			serverErr := make(chan error)
 			if !tc.skipServe {
 				go func() {

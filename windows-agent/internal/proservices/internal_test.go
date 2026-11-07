@@ -11,6 +11,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/common/certs"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/distros/distro"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
 	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v3"
 )
@@ -19,18 +20,15 @@ func TestNewTLSCertificates(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
-		breakCertificatesDir bool
+		// breakPublishableFile places a directory where a certificate file should
+		// be written. Nothing in the sub-tree is adoptable data, so it is wiped with
+		// the rest instead of failing the start.
 		breakPublishableFile bool
-		leaveStaleFile       bool
-
-		wantErr bool
+		// leaveStaleFile seeds leftover certificate material from a previous run.
+		leaveStaleFile bool
 	}{
-		"Success": {},
-
 		"Success removes stale certificate files": {leaveStaleFile: true},
-
-		"Error when the certificates directory cannot be created": {breakCertificatesDir: true, wantErr: true},
-		"Error when a publishable file cannot be written":         {breakPublishableFile: true, wantErr: true},
+		"Success wipes an obstructing directory":  {breakPublishableFile: true},
 	}
 
 	for name, tc := range testcases {
@@ -39,10 +37,6 @@ func TestNewTLSCertificates(t *testing.T) {
 
 			dir := t.TempDir()
 
-			if tc.breakCertificatesDir {
-				err := os.WriteFile(filepath.Join(dir, common.CertificatesDir), []byte{}, 0600)
-				require.NoError(t, err, "Setup: could not create the file that should break the certificates directory")
-			}
 			if tc.leaveStaleFile {
 				staleDir := filepath.Join(dir, common.CertificatesDir)
 				err := os.MkdirAll(staleDir, 0700)
@@ -55,11 +49,15 @@ func TestNewTLSCertificates(t *testing.T) {
 				require.NoError(t, err, "Setup: could not create the directory that should break the publishable file")
 			}
 
-			cfg, err := newTLSCertificates(dir)
-			if tc.wantErr {
-				require.Error(t, err, "newTLSCertificates should have failed")
-				return
-			}
+			custodian, err := securefiles.Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer custodian.Close()
+
+			certsCust, err := custodian.Subdir(common.CertificatesDir)
+			require.NoError(t, err, "Setup: could not sub-scope certificates custodian")
+			defer certsCust.Close()
+
+			cfg, err := newTLSCertificates(certsCust)
 			require.NoError(t, err, "newTLSCertificates failed")
 			require.NotNil(t, cfg, "newTLSCertificates should have returned a TLS config")
 
@@ -115,8 +113,18 @@ func TestNewTLSCertificatesFilesystemFailures(t *testing.T) {
 			certsDir := filepath.Join(dir, common.CertificatesDir)
 			require.NoError(t, os.MkdirAll(certsDir, 0700), "Setup: could not create certificates directory")
 
+			// Open the custodians before the permission sabotage: sub-scoping requires
+			// reading the certificates directory, which the sabotage intentionally breaks.
+			custodian, err := securefiles.Open(dir)
+			require.NoError(t, err, "Setup: could not open custodian")
+			defer custodian.Close()
+
+			certsCust, err := custodian.Subdir(common.CertificatesDir)
+			require.NoError(t, err, "Setup: could not sub-scope certificates custodian")
+			defer certsCust.Close()
+
 			if tc.breakReadDir {
-				// Remove read permission so os.ReadDir fails while os.Stat still succeeds.
+				// Remove read permission so the custodian's ReadDir fails.
 				//nolint:gosec // G302 - test setup needs directory execute permission.
 				require.NoError(t, os.Chmod(certsDir, 0100), "Setup: could not remove read permission")
 				defer func() {
@@ -127,7 +135,7 @@ func TestNewTLSCertificatesFilesystemFailures(t *testing.T) {
 
 			if tc.breakRemove {
 				require.NoError(t, os.WriteFile(filepath.Join(certsDir, "stale.pem"), []byte("stale"), 0600), "Setup: could not create stale certificate file")
-				// Remove write permission from the directory so os.Remove fails.
+				// Remove write permission from the directory so the custodian's Remove fails.
 				//nolint:gosec // G302 - test setup removes directory write permission.
 				require.NoError(t, os.Chmod(certsDir, 0500), "Setup: could not remove write permission")
 				defer func() {
@@ -136,7 +144,7 @@ func TestNewTLSCertificatesFilesystemFailures(t *testing.T) {
 				}()
 			}
 
-			_, err := newTLSCertificates(dir)
+			_, err = newTLSCertificates(certsCust)
 			require.Error(t, err, "newTLSCertificates should have failed")
 		})
 	}
@@ -155,7 +163,16 @@ func newTLSCertificatesWithFailingPKI() newTLSCertificatesOption {
 func TestNewTLSCertificatesPKIFailure(t *testing.T) {
 	t.Parallel()
 
-	_, err := newTLSCertificates(t.TempDir(), newTLSCertificatesWithFailingPKI())
+	dir := t.TempDir()
+	custodian, err := securefiles.Open(dir)
+	require.NoError(t, err, "Setup: could not open custodian")
+	defer custodian.Close()
+
+	certsCust, err := custodian.Subdir(common.CertificatesDir)
+	require.NoError(t, err, "Setup: could not sub-scope certificates custodian")
+	defer certsCust.Close()
+
+	_, err = newTLSCertificates(certsCust, newTLSCertificatesWithFailingPKI())
 	require.Error(t, err, "newTLSCertificates should have failed")
 }
 

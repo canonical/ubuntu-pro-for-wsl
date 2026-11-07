@@ -65,6 +65,7 @@ func cleanLocation(rootEnv, relpath string) (err error) {
 		return fmt.Errorf("environment variable %q is not set", rootEnv)
 	}
 
+	//nolint:forbidigo // The teardown command removes the public directory wholesale; there is no custodian left to serve it.
 	r, err := os.OpenRoot(root)
 	if err != nil {
 		return fmt.Errorf("failed to open root directory %q: %v", root, err)

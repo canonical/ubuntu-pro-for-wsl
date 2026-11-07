@@ -3,17 +3,39 @@ package cloudinit_test
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/common/testutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/cloudinit"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/config"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
+	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v3"
 )
+
+const landscapeConfigOld = `[irrelevant]
+info=this section should have been omitted
+
+[client]
+data=This is an old data field
+info=This is the old configuration
+`
+
+const landscapeConfigNew = `[irrelevant]
+info=this section should have been omitted
+
+[client]
+info = This is the new configuration
+url = www.example.com/new/rickroll
+hostagent_uid = landscapeUID1234
+`
 
 func TestNew(t *testing.T) {
 	t.Parallel()
@@ -21,13 +43,19 @@ func TestNew(t *testing.T) {
 	testCases := map[string]struct {
 		breakWriteAgentData bool
 		emptyConfig         bool
+		closedCustodian     bool
 
 		wantErr         bool
+		wantErrContains string
 		wantNoAgentYaml bool
 	}{
 		"Success": {},
 		"No file if there is no config to write into":        {emptyConfig: true, wantNoAgentYaml: true},
 		"Error when cloud-init agent file cannot be written": {breakWriteAgentData: true, wantErr: true},
+		// A closed custodian surfaces at the first write rather than at the purge:
+		// an unpurgeable node is reported and survived, so it is the inability to
+		// publish the agent's own file that makes New fail.
+		"Error when the custodian is already closed": {closedCustodian: true, wantErr: true, wantErrContains: "could not create agent's cloud-init file"},
 	}
 
 	for name, tc := range testCases {
@@ -36,7 +64,13 @@ func TestNew(t *testing.T) {
 
 			ctx := context.Background()
 
-			publicDir := t.TempDir()
+			custodian := newCloudInitCustodian(t)
+
+			if tc.closedCustodian {
+				// Construction both purges and writes the agent's file, so a closed
+				// custodian fails New at whichever of the two cannot proceed.
+				require.NoError(t, custodian.Close(), "Setup: could not close the custodian")
+			}
 
 			proToken := "test token"
 			if tc.emptyConfig {
@@ -48,16 +82,18 @@ func TestNew(t *testing.T) {
 				subcriptionErr: tc.breakWriteAgentData,
 			}
 
-			ci, err := cloudinit.New(ctx, conf, publicDir)
+			ci, err := cloudinit.New(ctx, conf, custodian)
 			if tc.wantErr {
 				require.Error(t, err, "Cloud-init creation should have returned an error")
+				if tc.wantErrContains != "" {
+					require.ErrorContains(t, err, tc.wantErrContains)
+				}
 				return
 			}
 			require.NoError(t, err, "Cloud-init creation should have returned no error")
 			require.NotEmpty(t, ci, "Cloud-init creation should have returned a CloudInit object")
 
-			// We don't assert on specifics, as they are tested in WriteAgentData tests.
-			path := filepath.Join(publicDir, ".cloud-init", "agent.yaml")
+			path := filepath.Join(custodian.BasePath(), "agent.yaml")
 			if tc.wantNoAgentYaml {
 				require.NoFileExists(t, path, "there should be no agent data file if there is no config to write into")
 				return
@@ -69,23 +105,6 @@ func TestNew(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	t.Parallel()
-
-	const landscapeConfigOld string = `[irrelevant]
-info=this section should have been omitted
-
-[client]
-data=This is an old data field
-info=This is the old configuration
-`
-
-	const landscapeConfigNew string = `[irrelevant]
-info=this section should have been omitted
-
-[client]
-info = This is the new configuration
-url = www.example.com/new/rickroll
-hostagent_uid = landscapeUID1234
-`
 
 	testCases := map[string]struct {
 		// Contents
@@ -100,14 +119,6 @@ hostagent_uid = landscapeUID1234
 		// Landscape parsing
 		landscapeNoClientSection bool
 		badLandscape             bool
-
-		// Break writing to file
-		breakDir          bool
-		breakTempFile     bool
-		breakFile         bool
-		breakRemovingFile bool
-
-		wantAgentYamlAsDir bool
 	}{
 		"Success":                            {},
 		"Without hostagent UID":              {skipHostAgentUID: true},
@@ -116,14 +127,9 @@ hostagent_uid = landscapeUID1234
 		"Without Landscape [client] section": {landscapeNoClientSection: true},
 		"With empty contents":                {skipProToken: true, skipLandscapeConf: true},
 
-		"Error to remove existing agent.yaml":   {skipProToken: true, skipLandscapeConf: true, breakRemovingFile: true, wantAgentYamlAsDir: true},
 		"Error obtaining pro token":             {breakSubscription: true},
 		"Error obtaining Landscape config":      {breakLandscape: true},
 		"Error with erroneous Landscape config": {badLandscape: true},
-
-		"Error when the datadir cannot be created":   {breakDir: true},
-		"Error when the temp file cannot be written": {breakTempFile: true},
-		"Error when the temp file cannot be renamed": {breakFile: true},
 	}
 
 	for name, tc := range testCases {
@@ -131,9 +137,8 @@ hostagent_uid = landscapeUID1234
 			t.Parallel()
 			ctx := context.Background()
 
-			publicDir := t.TempDir()
-			dir := filepath.Join(publicDir, ".cloud-init")
-			path := filepath.Join(dir, "agent.yaml")
+			custodian := newCloudInitCustodian(t)
+			path := filepath.Join(custodian.BasePath(), "agent.yaml")
 
 			//#nosec G101 // False positive, not real credentials.
 			conf := &mockConfig{
@@ -142,7 +147,7 @@ hostagent_uid = landscapeUID1234
 			}
 
 			// Test a clean filesystem (New calls WriteAgentData internally)
-			ci, err := cloudinit.New(ctx, conf, publicDir)
+			ci, err := cloudinit.New(ctx, conf, custodian)
 			require.NoError(t, err, "Setup: cloudinit.New should return no error")
 			require.FileExists(t, path, "Setup: New() should have created an agent cloud-init file")
 
@@ -169,39 +174,9 @@ hostagent_uid = landscapeUID1234
 				conf.landscapeConf = strings.Replace(conf.landscapeConf, "hostagent_uid = landscapeUID1234", "", 1)
 			}
 
-			if tc.breakTempFile {
-				require.NoError(t, os.RemoveAll(path+".tmp"), "Setup: Agent cloud-init file should not fail to delete")
-				require.NoError(t, os.MkdirAll(path+".tmp", 0600), "Setup: could not create directory to mess with cloud-init")
-			}
-
-			if tc.breakFile {
-				require.NoError(t, os.RemoveAll(path), "Setup: Agent cloud-init file should not fail to delete")
-				require.NoError(t, os.MkdirAll(path, 0600), "Setup: could not create directory to mess with cloud-init")
-			}
-
-			if tc.breakDir {
-				require.NoError(t, os.RemoveAll(dir), "Setup: Agent cloud-init file should not fail to delete")
-				require.NoError(t, os.WriteFile(dir, nil, 0600), "Setup: could not create file to mess with cloud-init directory")
-			}
-
-			if tc.breakRemovingFile {
-				_ = os.RemoveAll(path)
-				require.NoError(t, os.MkdirAll(path, 0750), "Creating the directory that breaks removing agent.yaml should not fail")
-				require.NoError(t, os.WriteFile(filepath.Join(path, "child.txt"), nil, 0600), "Setup: could not create file to mess with agent.yaml")
-			}
 			ci.Update(ctx)
 
 			// Assert that the file was updated (success case) or that the old one remains (error case)
-			if tc.breakFile || tc.breakDir {
-				// Cannot really assert on anything: we removed the old file
-				return
-			}
-
-			if tc.wantAgentYamlAsDir {
-				require.DirExists(t, path, "There should be a directory instead of agent.yaml")
-				return
-			}
-
 			golden := testutils.Path(t)
 			if _, err = os.Stat(golden); err != nil && os.IsNotExist(err) {
 				// golden file doesn't exist
@@ -218,7 +193,7 @@ hostagent_uid = landscapeUID1234
 	}
 }
 
-type metadata struct {
+type testMetadata struct {
 	InstanceID string `yaml:"instance-id"`
 }
 
@@ -244,22 +219,18 @@ data:
 		noOldData bool
 
 		// Break writing to file
-		breakDir          bool
-		breakTempFile     bool
 		breakFile         bool
 		breakMetadataFile bool
 
 		want         string
 		wantErr      bool
-		wantMetadata *metadata
+		wantMetadata *testMetadata
 	}{
 		"Success":             {},
 		"With no old data":    {want: newCloudInit, noOldData: true},
 		"With new valid data": {want: newCloudInit},
-		"With metadata":       {instanceID: "1234", wantMetadata: &metadata{InstanceID: "1234"}},
+		"With metadata":       {instanceID: "1234", wantMetadata: &testMetadata{InstanceID: "1234"}},
 
-		"Error when the datadir cannot be created":       {breakDir: true, want: oldCloudInit, wantErr: true},
-		"Error when the temp file cannot be written":     {breakTempFile: true, want: oldCloudInit, wantErr: true},
 		"Error when the temp file cannot be renamed":     {breakFile: true, want: oldCloudInit, wantErr: true},
 		"Error when the metadata file cannot be renamed": {breakMetadataFile: true, instanceID: "uid123", want: oldCloudInit, wantErr: true},
 	}
@@ -271,25 +242,18 @@ data:
 
 			distroName := "CoolDistro"
 
-			publicDir := t.TempDir()
-			dir := filepath.Join(publicDir, ".cloud-init")
-			path := filepath.Join(dir, distroName+".user-data")
-			metadataPath := filepath.Join(dir, distroName+".meta-data")
+			custodian := newCloudInitCustodian(t)
+			path := filepath.Join(custodian.BasePath(), distroName+".user-data")
+			metadataPath := filepath.Join(custodian.BasePath(), distroName+".meta-data")
 
 			conf := &mockConfig{}
 
 			// Test a clean filesystem (New calls WriteAgentData internally)
-			ci, err := cloudinit.New(ctx, conf, publicDir)
+			ci, err := cloudinit.New(ctx, conf, custodian)
 			require.NoError(t, err, "Setup: cloud-init New should return no errors")
 
 			if !tc.noOldData {
-				require.NoError(t, os.MkdirAll(filepath.Dir(path), 0700), "Setup: could not write old distro data directory")
 				require.NoError(t, os.WriteFile(path, []byte(oldCloudInit), 0600), "Setup: could not write old distro data")
-			}
-
-			if tc.breakTempFile {
-				require.NoError(t, os.RemoveAll(path+".tmp"), "Setup: Distro cloud-init file should not fail to delete")
-				require.NoError(t, os.MkdirAll(path+".tmp", 0600), "Setup: could not create directory to mess with cloud-init")
 			}
 
 			if tc.breakFile {
@@ -302,11 +266,6 @@ data:
 				require.NoError(t, os.MkdirAll(metadataPath, 0600), "Setup: could not create directory to mess with cloud-init")
 			}
 
-			if tc.breakDir {
-				require.NoError(t, os.RemoveAll(dir), "Setup: Distro cloud-init file should not fail to delete")
-				require.NoError(t, os.WriteFile(dir, nil, 0600), "Setup: could not create file to mess with cloud-init directory")
-			}
-
 			err = ci.WriteDistroData(distroName, tc.want, tc.instanceID)
 			if tc.wantErr {
 				require.Error(t, err, "WriteDistroData should have returned an error")
@@ -315,7 +274,7 @@ data:
 			}
 
 			// Assert that the file was updated (success case) or that the old one remains (error case)
-			if tc.breakFile || tc.breakDir {
+			if tc.breakFile {
 				// Cannot really assert on anything: we removed the old file
 				return
 			}
@@ -331,7 +290,7 @@ data:
 			}
 			require.NoError(t, err, "There should be no error reading the distro's cloud-init metadata file")
 			require.NotEmpty(t, string(got), "Bazinga")
-			var data metadata
+			var data testMetadata
 			require.NoError(t, yaml.Unmarshal(got, &data), "Could not unmarshall test metadata")
 			require.Equal(t, *tc.wantMetadata, data, "cloud-init metadata does not match the golden file")
 		})
@@ -362,11 +321,12 @@ func TestRemoveDistroData(t *testing.T) {
 
 			distroName := "CoolDistro"
 
-			publicDir := t.TempDir()
-			dir := filepath.Join(publicDir, ".cloud-init")
+			custodian := newCloudInitCustodian(t)
+			dir := custodian.BasePath()
 			path := filepath.Join(dir, distroName+".user-data")
+			metadataPath := filepath.Join(dir, distroName+".meta-data")
 
-			ci, err := cloudinit.New(ctx, &mockConfig{}, publicDir)
+			ci, err := cloudinit.New(ctx, &mockConfig{}, custodian)
 			require.NoError(t, err, "Setup: cloud-init New should return no errors")
 
 			if !tc.dirDoesNotExist {
@@ -378,7 +338,8 @@ func TestRemoveDistroData(t *testing.T) {
 				}
 				require.NoError(t, os.MkdirAll(dir, 0700), "Setup: could not set up directory")
 				if !tc.fileDoesNotExist {
-					require.NoError(t, os.WriteFile(path, []byte("hello, world!"), 0600), "Setup: could not set up directory")
+					require.NoError(t, os.WriteFile(path, []byte("hello, world!"), 0600), "Setup: could not plant the user data")
+					require.NoError(t, os.WriteFile(metadataPath, []byte("instance-id: inst-123\n"), 0600), "Setup: could not plant the meta data")
 				}
 			}
 
@@ -386,10 +347,15 @@ func TestRemoveDistroData(t *testing.T) {
 			if tc.wantErr {
 				require.Error(t, err, "RemoveDistroData should return an error")
 				require.FileExists(t, path, "RemoveDistroData should not have removed the distro cloud-init data file")
+				// The failing removal must not shield the other file: its
+				// leftover is the stale instance-id this function exists to
+				// prevent.
+				require.NoFileExists(t, metadataPath, "the failed removal must not shield the meta data")
 				return
 			}
 			require.NoError(t, err, "RemoveDistroData should return no errors")
 			require.NoFileExists(t, path, "RemoveDistroData should remove the distro cloud-init data file")
+			require.NoFileExists(t, metadataPath, "RemoveDistroData should remove the distro instance metadata file")
 		})
 	}
 }
@@ -424,4 +390,211 @@ func (c mockConfig) LandscapeClientConfig() (string, config.Source, error) {
 	}
 
 	return c.landscapeConf, config.SourceUser, nil
+}
+
+// TestStartupPurge drives cloudinit.New over a seeded .cloud-init sub-tree and
+// checks, one row per scenario, what survives the startup disposition: stamped
+// nodes are left untouched, whatever their name or content, and unstamped nodes
+// are purged (a per-distro-looking one at error level, as it smells like
+// tampering). The agent's own file is always regenerated afterwards.
+//
+// The subtests run serially: each installs a hook on the shared global logrus
+// logger, and parallel add/reset of that hook would let one case remove another's
+// hook or answer another's log assertions.
+func TestStartupPurge(t *testing.T) {
+	testCases := map[string]struct {
+		// seedStamped are written through the custodian, so they carry the stamp.
+		seedStamped map[string]string
+		// seedRaw are written behind the custodian's back, so they carry none: what a
+		// crash, a pre-custodian agent, or a stamp-less filesystem leaves behind.
+		seedRaw map[string]string
+		// seedDirs are directories planted in the sub-tree, foreign by shape rather than
+		// by stamp. seedDangling plants a symlink whose target cannot be stated, and
+		// seedUnremovable a tree the purge cannot delete (non-root POSIX only).
+		seedDirs        []string
+		seedDangling    string
+		seedUnremovable string
+
+		// wantFiles must still hold exactly this content; wantGone must be absent
+		// entirely, whatever their shape; wantDirs must still be directories.
+		wantFiles map[string]string
+		wantGone  []string
+		wantDirs  []string
+
+		// wantLogContains must appear in an entry at wantLogLevel, and nothing at
+		// warning or above may name quietAbout (quietAboutOnUnix only off Windows,
+		// where an attribute-less file has no clean "not owned" answer).
+		wantLogLevel     logrus.Level
+		wantLogContains  string
+		quietAbout       []string
+		quietAboutOnUnix []string
+	}{
+		"Preserves per-distro data on restart": {
+			seedStamped: map[string]string{"CoolDistro.user-data": "distro-user-data", "CoolDistro.meta-data": "instance-id: inst-123\n"},
+			wantFiles:   map[string]string{"CoolDistro.user-data": "distro-user-data", "CoolDistro.meta-data": "instance-id: inst-123\n"},
+		},
+		"Removes an unstamped unrecognised file": {
+			seedRaw:         map[string]string{"stale.txt": "planted"},
+			wantGone:        []string{"stale.txt"},
+			wantLogLevel:    logrus.WarnLevel,
+			wantLogContains: "stale.txt",
+		},
+		// A planted node in a tree that also holds stamped ones is tampering:
+		// the stamp was there when the foreign node appeared.
+		"Removes a per-distro node that is not owned in a stamped tree": {
+			seedStamped:     map[string]string{"OtherDistro.user-data": "ours"},
+			seedRaw:         map[string]string{"ForeignDistro.user-data": "planted"},
+			wantGone:        []string{"ForeignDistro.user-data"},
+			wantLogLevel:    logrus.ErrorLevel,
+			wantLogContains: "ForeignDistro.user-data",
+		},
+		// The first start after upgrading to the custodian finds a sub-tree where
+		// nothing carries the stamp: a migration, not an attack, so it is said
+		// once at warning level, never once per node at error level.
+		"Sweeps a pre-stamp sub-tree as a migration": {
+			seedRaw:         map[string]string{"ForeignDistro.user-data": "planted", "ForeignDistro.meta-data": "planted"},
+			wantGone:        []string{"ForeignDistro.user-data", "ForeignDistro.meta-data"},
+			wantLogLevel:    logrus.WarnLevel,
+			wantLogContains: "pre-stamp",
+			quietAbout:      []string{"ForeignDistro.user-data"},
+		},
+		// The absence pin can only pass — nothing seeds LoneDistro.user-data — but it
+		// stays, so the row keeps saying its contract: user-data is not conjured for a
+		// distro that never had one.
+		"Preserves a lone meta-data file": {
+			seedStamped: map[string]string{"LoneDistro.meta-data": "instance-id: lone-inst-123\n"},
+			wantFiles:   map[string]string{"LoneDistro.meta-data": "instance-id: lone-inst-123\n"},
+			wantGone:    []string{"LoneDistro.user-data"},
+		},
+
+		"Purges a directory named like a distro file": {
+			seedDirs: []string{"DirDistro.meta-data"},
+			wantGone: []string{"DirDistro.meta-data"},
+		},
+
+		// Refusing to start would leave the node exactly where it is, still there for
+		// cloud-init to consume at first boot, and would take the agent down too.
+		"Reports but survives a node it cannot remove": {
+			seedUnremovable: "Foreign.user-data",
+			wantDirs:        []string{"Foreign.user-data"},
+			wantLogLevel:    logrus.ErrorLevel,
+			wantLogContains: "could not remove every unrecognised node",
+		},
+		"Warns and purges a node whose ownership cannot be determined": {
+			seedDangling:    "dangling.user-data",
+			wantGone:        []string{"dangling.user-data"},
+			wantLogLevel:    logrus.WarnLevel,
+			wantLogContains: "could not check ownership",
+		},
+		"Removes leftover temporaries and a stale agent file quietly": {
+			seedRaw:          map[string]string{".tmp-agent.yaml-abcd1234": "partial", "agent.yaml": "stale"},
+			wantGone:         []string{".tmp-agent.yaml-abcd1234"},
+			quietAbout:       []string{".tmp-"},
+			quietAboutOnUnix: []string{"agent.yaml"},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			if tc.seedUnremovable != "" && (runtime.GOOS == "windows" || os.Geteuid() == 0) {
+				t.Skip("read-only directory semantics require a non-root Unix user")
+			}
+
+			cloudInitDir := filepath.Join(t.TempDir(), ".cloud-init")
+			custodian, err := securefiles.Open(cloudInitDir)
+			require.NoError(t, err, "Setup: could not open cloud-init custodian")
+			defer custodian.Close()
+
+			hook := test.NewGlobal()
+			defer hook.Reset()
+
+			for name, content := range tc.seedStamped {
+				require.NoError(t, custodian.WriteFile(name, []byte(content)), "Setup: could not write %s", name)
+			}
+			for name, content := range tc.seedRaw {
+				require.NoError(t, os.WriteFile(filepath.Join(cloudInitDir, name), []byte(content), 0600),
+					"Setup: could not plant %s", name)
+			}
+			for _, name := range tc.seedDirs {
+				require.NoError(t, os.Mkdir(filepath.Join(cloudInitDir, name), 0700), "Setup: could not plant %s", name)
+			}
+			if tc.seedDangling != "" {
+				target := filepath.Join(cloudInitDir, "no-such-target")
+				if err := os.Symlink(target, filepath.Join(cloudInitDir, tc.seedDangling)); err != nil {
+					t.Skipf("symlinks unavailable: %v", err)
+				}
+			}
+			if tc.seedUnremovable != "" {
+				keep := filepath.Join(cloudInitDir, tc.seedUnremovable, "keep")
+				require.NoError(t, os.MkdirAll(keep, 0700), "Setup: could not create the obstructing tree")
+				require.NoError(t, os.WriteFile(filepath.Join(keep, "child"), []byte("x"), 0600), "Setup: could not fill it")
+				//nolint:gosec // G302 - test setup removes directory write permission.
+				require.NoError(t, os.Chmod(keep, 0500), "Setup: could not make it read-only")
+				//nolint:gosec // G302 - test teardown restores directory permissions.
+				t.Cleanup(func() { _ = os.Chmod(keep, 0700) })
+			}
+
+			_, err = cloudinit.New(t.Context(), &mockConfig{proToken: "token"}, custodian)
+			require.NoError(t, err, "Setup: cloudinit.New should succeed")
+
+			// The agent's own file is published whatever else happened, which is also
+			// what proves a stale one was replaced rather than kept.
+			gotAgent, err := os.ReadFile(filepath.Join(cloudInitDir, "agent.yaml"))
+			require.NoError(t, err, "agent.yaml should have been written")
+			require.Contains(t, string(gotAgent), "token", "agent.yaml should carry the token")
+
+			for name, want := range tc.wantFiles {
+				got, err := os.ReadFile(filepath.Join(cloudInitDir, name))
+				require.NoError(t, err, "%s should have survived startup", name)
+				require.Equal(t, want, string(got), "%s should have survived unchanged", name)
+			}
+			for _, name := range tc.wantGone {
+				_, err := os.Lstat(filepath.Join(cloudInitDir, name))
+				require.ErrorIs(t, err, fs.ErrNotExist, "%s should not have survived startup", name)
+			}
+			for _, name := range tc.wantDirs {
+				require.DirExists(t, filepath.Join(cloudInitDir, name), "%s should still be there", name)
+			}
+
+			if tc.wantLogContains != "" {
+				require.True(t, loggedAt(hook, tc.wantLogLevel, tc.wantLogContains),
+					"expected a %s entry mentioning %q", tc.wantLogLevel, tc.wantLogContains)
+			}
+			quiet := tc.quietAbout
+			if runtime.GOOS != "windows" {
+				quiet = append(quiet, tc.quietAboutOnUnix...)
+			}
+			for _, entry := range hook.AllEntries() {
+				if entry.Level > logrus.WarnLevel {
+					continue
+				}
+				for _, substr := range quiet {
+					require.NotContains(t, entry.Message, substr, "expected churn to be disposed of quietly")
+				}
+			}
+		})
+	}
+}
+
+func newCloudInitCustodian(t *testing.T) *securefiles.Custodian {
+	t.Helper()
+	publicDir := t.TempDir()
+	c, err := securefiles.Open(filepath.Join(publicDir, ".cloud-init"))
+	require.NoError(t, err, "Setup: could not open cloud-init custodian")
+	// The custodian holds an open handle on its root directory, which on Windows blocks
+	// removing that directory: it must be closed before the TempDir cleanup runs.
+	t.Cleanup(func() { _ = c.Close() })
+	return c
+}
+
+// loggedAt reports whether the hook captured an entry at the given level containing substr.
+// The level is matched exactly, unlike the quiet check, which reads entries at every
+// level: churn said too loudly is still churn, whatever level it arrived at.
+func loggedAt(hook *test.Hook, level logrus.Level, substr string) bool {
+	for _, entry := range hook.AllEntries() {
+		if entry.Level == level && strings.Contains(entry.Message, substr) {
+			return true
+		}
+	}
+	return false
 }

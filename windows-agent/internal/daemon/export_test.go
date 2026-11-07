@@ -3,6 +3,7 @@ package daemon
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/daemontestutils"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/daemon/netmonitoring"
@@ -28,6 +29,14 @@ func WithMockedGetAdapterAddresses(m daemontestutils.MockIPConfig) Option {
 		o.getAdaptersAddresses = func(family, flags uint32, reserved uintptr, adapterAddresses *ipAdapterAddresses, sizePointer *uint32) (errcode error) {
 			return m.GetAdaptersAddresses(family, flags, reserved, (*daemontestutils.IPAdapterAddresses)(adapterAddresses), sizePointer)
 		}
+	}
+}
+
+// WithPublicationInterval sets how often the daemon re-attempts publishing the
+// address file when the startup attempt lost to a holder.
+func WithPublicationInterval(interval time.Duration) Option {
+	return func(o *options) {
+		o.publicationInterval = interval
 	}
 }
 

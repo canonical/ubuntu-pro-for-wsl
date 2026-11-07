@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	agent_api "github.com/canonical/ubuntu-pro-for-wsl/agentapi/go"
+	"github.com/canonical/ubuntu-pro-for-wsl/common"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/interceptorschain"
 	"github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logconnections"
 	log "github.com/canonical/ubuntu-pro-for-wsl/common/grpc/logstreamer"
@@ -18,6 +19,7 @@ import (
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/registrywatcher"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/ui"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/proservices/wslinstance"
+	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/securefiles"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/tasks"
 	"github.com/canonical/ubuntu-pro-for-wsl/windows-agent/internal/ubuntupro"
 	"github.com/sirupsen/logrus"
@@ -34,8 +36,9 @@ type Manager struct {
 	landscapeService   *landscape.Service
 	registryWatcher    *registrywatcher.Service
 	db                 *database.DistroDB
-
-	creds credentials.TransportCredentials
+	creds              credentials.TransportCredentials
+	cloudInitDir       *securefiles.Custodian
+	certsDir           *securefiles.Custodian
 }
 
 // options are the configurable functional options for the daemon.
@@ -57,7 +60,7 @@ func WithRegistry(registry registrywatcher.Registry) func(o *options) {
 // It instantiates both ui and wsl instance services.
 //
 // Once done, Stop must be called to deallocate resources.
-func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s Manager, err error) {
+func New(ctx context.Context, publicCustodian *securefiles.Custodian, privateDir string, args ...Option) (s Manager, err error) {
 	log.Debug(ctx, "Building new GRPC services manager")
 
 	defer func() {
@@ -81,7 +84,12 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 
 	conf := config.New(ctx, privateDir)
 
-	cloudInit, err := cloudinit.New(ctx, conf, publicDir)
+	s.cloudInitDir, err = publicCustodian.Subdir(".cloud-init")
+	if err != nil {
+		return s, fmt.Errorf("failed to open cloud-init directory: %v", err)
+	}
+
+	cloudInit, err := cloudinit.New(ctx, conf, s.cloudInitDir)
 	if err != nil {
 		return s, err
 	}
@@ -149,7 +157,16 @@ func New(ctx context.Context, publicDir, privateDir string, args ...Option) (s M
 		log.Warning(ctx, err.Error())
 	}
 
-	tlsConfig, err := newTLSCertificates(publicDir)
+	// Stale certificate material from previous runs is cleaned inside
+	// newTLSCertificates, once the fresh ephemeral PKI is ready to publish.
+	certsDir, err := publicCustodian.Subdir(common.CertificatesDir)
+	if err != nil {
+		return s, fmt.Errorf("failed to open certificates directory: %v", err)
+	}
+
+	s.certsDir = certsDir
+
+	tlsConfig, err := newTLSCertificates(s.certsDir)
 	if err != nil {
 		return s, fmt.Errorf("failed to create certificates: %s", err)
 	}
@@ -195,6 +212,18 @@ func (m Manager) Stop(ctx context.Context) {
 
 	if m.db != nil {
 		m.db.Close(ctx)
+	}
+
+	if m.cloudInitDir != nil {
+		if err := m.cloudInitDir.Close(); err != nil {
+			log.Warningf(ctx, "Could not close cloud-init directory: %v", err)
+		}
+	}
+
+	if m.certsDir != nil {
+		if err := m.certsDir.Close(); err != nil {
+			log.Warningf(ctx, "Could not close certificates directory: %v", err)
+		}
 	}
 }
 
