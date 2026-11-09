@@ -12,9 +12,11 @@ packages:
   agentapi:
     dependency: "direct main"
     description:
-      path: "../../../agentapi/dart"
-      relative: true
-    source: path
+      path: "agentapi/dart"
+      ref: HEAD
+      resolved-ref: e54686dbad9370ee7a3662cb8f7821982e10aede
+      url: "https://github.com/canonical/ubuntu-pro-for-wsl"
+    source: git
     version: "0.0.1"
   analyzer:
     dependency: transitive
@@ -654,9 +656,11 @@ packages:
   p4w_ms_store:
     dependency: "direct main"
     description:
-      path: "../p4w_ms_store"
-      relative: true
-    source: path
+      path: "gui/packages/p4w_ms_store"
+      ref: HEAD
+      resolved-ref: e54686dbad9370ee7a3662cb8f7821982e10aede
+      url: "https://github.com/canonical/ubuntu-pro-for-wsl"
+    source: git
     version: "0.0.1"
   package_config:
     dependency: transitive
@@ -1240,5 +1244,5 @@ packages:
     source: hosted
     version: "0.0.4"
 sdks:
-  dart: ">=3.13.0 <4.0.0"
-  flutter: ">=3.47.0"
+  dart: ">=3.12.0 <4.0.0"
+  flutter: ">=3.44.0"
