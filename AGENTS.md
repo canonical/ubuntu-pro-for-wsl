@@ -1,8 +1,8 @@
-# Ubuntu Pro for WSL: Guide for coding agents
+# Ubuntu Pro app: Guide for coding agents
 
 ## Description
 
-**Ubuntu Pro for WSL** is a multi component system that automates enrollment of any **Ubuntu on WSL**
+**Ubuntu Pro app** (formerly Ubuntu Pro for WSL) is a multi component application that automates enrollment of any **Ubuntu on WSL**
 instance into Canonical security and compliance services, such as Landscape and Ubuntu Pro, by
 automatically enforcing its configuration to all existing and future instances. It's made of
 components running on Ubuntu on WSL (Linux) and on the Windows host, described below:
@@ -55,7 +55,7 @@ as to keep an _instance_ alive, install or uninstall _instances_.
 
 To enforce Pro attachment and Landscape configuration at first boot time, we leverage `cloud-init`.
 Actions taken after first boot are mediated by `wsl-pro-service` itself.
-The `landscape-client` is configured through the Pro for WSL app, but still has the role of
+The `landscape-client` is configured through the Ubuntu Pro app, but still has the role of
 communicating with the server about the instance it is running on.
 
 ## Tech stack

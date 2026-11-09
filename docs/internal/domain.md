@@ -1,6 +1,6 @@
 # Domain model
 
-Ubiquitous language for Ubuntu Pro for WSL. This is a glossary — definitions only, no implementation
+Ubiquitous language for the Ubuntu Pro app. This is a glossary — definitions only, no implementation
 details, no specs, no scratch-pad content. Keep entries sorted alphabetically.
 
 ---
@@ -57,12 +57,6 @@ Ambiguous shorthand: either the Linux distribution as a distributable package (w
 downloads, tar-based or msix) or a materialized *Distro instance*. Code uses `distro` pervasively in
 the latter sense; in prose, prefer *Distro instance* for a materialized system.
 
-### Distro identity
-
-The (name, GUID) pair uniquely identifying a distro instance. Name alone isn't stable — WSL allows
-unregistering and re-registering under the same name — so the *Windows Agent* validates the stored
-GUID against the system and treats a mismatch as a different instance, invalidating the old entry.
-
 ### Distro database
 
 The *Windows Agent*'s persisted registry of managed distro instances, held in the *Private
@@ -71,6 +65,12 @@ system so a stale entry (name reused by a different GUID) is detected and invali
 runtime against distro instances WSL reports with no entry — *Unmanaged distro instances* — which
 become managed on first `wsl-pro-service` connection.
 
+### Distro identity
+
+The (name, GUID) pair uniquely identifying a distro instance. Name alone isn't stable — WSL allows
+unregistering and re-registering under the same name — so the *Windows Agent* validates the stored
+GUID against the system and treats a mismatch as a different instance, invalidating the old entry.
+
 ### Distro instance
 
 A named Ubuntu on WSL system registered with WSL — a materialized instance of a *Distro* package,
@@ -78,7 +78,7 @@ whether or not the *Windows Agent* manages it.
 
 ### GUI
 
-The `ubuntupro.exe` graphical app on the Windows host: the end-user configuration surface. Starts the
+The *Ubuntu Pro app*'s `ubuntupro.exe` graphical interface on the Windows host: the end-user configuration surface. Starts the
 *Windows Agent* via the *Launcher* if not running and submits *Pro Token*/*Landscape* configuration
 to the agent over gRPC — never writes configuration to the registry or filesystem itself.
 
@@ -122,7 +122,7 @@ never the agent directly.
 
 ### Microsoft Store subscription
 
-A Store subscription add-on for Ubuntu Pro for WSL, purchased e.g. via the *GUI*. A *Configuration
+A Store subscription add-on for the *Ubuntu Pro app*, purchased e.g. via the *GUI*. A *Configuration
 Source* of a *Pro Token*: the purchase lives in Microsoft's systems and only yields a Pro Token once
 the *Contracts Server* validates the entitlement. Not itself an Ubuntu Pro subscription — the
 purchase that, once validated, unlocks one.
@@ -178,6 +178,17 @@ A unit of configuration work (Pro attachment, Landscape config) queued for a dis
 executed over its `wsl-pro-service` gRPC connection. Persisted to disk, so pending work survives
 *Windows Agent* restarts; retryable failed tasks are re-queued.
 
+### Ubuntu Pro
+
+Canonical's subscription service providing security maintenance and support for Ubuntu systems.
+A *Pro token* grants access to the subscription's services.
+
+### Ubuntu Pro app
+
+The application that automates *Ubuntu Pro* attachment and *Landscape* enrollment. It currently
+supports Windows hosts and Ubuntu on WSL: its components include the *Windows agent*, *Launcher*,
+*GUI*, and *wsl-pro-service*, which invokes the *Ubuntu Pro client* in each distro instance.
+
 ### Ubuntu Pro client
 
 The `pro` command-line tool (package `ubuntu-pro-client`, formerly `ubuntu-advantage-tools`)
@@ -186,11 +197,8 @@ to attach with the active *Pro Token*, detach, and query attachment status.
 
 ### Ubuntu Pro for WSL
 
-The product this repository builds: the *Windows Agent*, *Launcher*, and *GUI* packaged for Windows,
-plus the *wsl-pro-service* deb shipped in Ubuntu, automating Pro attachment and Landscape enrollment
-of distro instances. Abbreviated **UP4W** in code (the `UP4W_*` env-var prefix, gRPC TLS server name)
-and build machinery (CMake project name). An internal convenience acronym — never in user-facing
-text.
+The former name of the *Ubuntu Pro app*, the same application. Historically abbreviated **UP4W**
+in code and build machinery; the acronym is not user-facing.
 
 ### Unmanaged distro instance
 
@@ -208,7 +216,7 @@ app's behalf. Neither a *Pro Token* nor a user credential.
 
 ### Windows agent
 
-The `ubuntu-pro-agent.exe` process on the Windows host, running with user privileges: the system's
+The *Ubuntu Pro app*'s `ubuntu-pro-agent.exe` process on the Windows host, running with user privileges: the system's
 orchestrator. Reads configuration from the registry and its *Private Directory*, manages the
 lifecycle of all managed distro instances, and writes authoritative runtime state (address,
 certificates, cloud-init data) to the *Public Directory* for `wsl-pro-service`.
@@ -222,6 +230,6 @@ Database* entry) from a task requesting retry at the instance's next connection.
 
 ### `wsl-pro-service`
 
-A systemd unit running inside each distro instance with root privileges. Reads runtime state from the
+An *Ubuntu Pro app* systemd unit running inside each distro instance with root privileges. Reads runtime state from the
 *Public Directory* (projected via 9P/DrvFs), connects to the *Windows Agent* over mTLS gRPC, and
 applies Pro attachment and Landscape configuration locally.
