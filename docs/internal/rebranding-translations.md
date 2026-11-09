@@ -56,3 +56,12 @@ The `ca_ES` catalog has untranslated changed descriptions for the Windows agent
 short and long help and the WSL service long help. Translate and review those
 messages before release; the generated template is the source for any other
 locale translations. No human translation review is claimed.
+
+## Release gate
+
+Before publication, the user must complete and review every affected explanatory
+translation listed above and the changed CLI gettext descriptions in each affected
+locale. The English sources and generated gettext catalogs are not evidence of
+human review. The repository currently contains a `ca_ES` CLI catalog; its
+changed help descriptions are untranslated. This translation gate is separate
+from missing visual captures and environmental verification blockers.
