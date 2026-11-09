@@ -18,7 +18,7 @@ the `agent` serving both end users and developers on testing and debugging.
 - **ubuntu-pro-agent-launcher.exe** (a.k.a. the `launcher`): An invisible Win32 window that hosts
 the `agent` under a pseudo console, allowing it to run in the background without console windows
 popping up every time it interacts with WSL via API or command line.
-- **ubuntu.com/wsl/docs**: The official documentation for Ubuntu on WSL and Pro for WSL, hosted on
+- **ubuntu.com/wsl/docs**: The official documentation for Ubuntu on WSL and the Ubuntu Pro app, hosted on
 the Ubuntu website.
 
 The source code of all those components is hosted at https://github.com/canonical/ubuntu-pro-for-wsl
@@ -87,13 +87,13 @@ cross platform manner, even if targetting only Windows**. This allows for better
 - `common/` - Go constants, logic and test helpers shared between the `agent` and `wsl-pro-service`.
 - `contractsapi/` - Canonical Contracts API client in Go used for the integration with Microsoft
      Store subscription management.
-- `docs/` - Official documentation for Ubuntu on WSL and Pro for WSL, hosted on the Ubuntu website.
+- `docs/` - Official documentation for Ubuntu on WSL and the Ubuntu Pro app, hosted on the Ubuntu website.
 - `docs/internal/` - Development documentation, like architectural decision records, domain language
      mapping and coding standards, targetting AI agents and developers, not published on the website.
 - `end-to-end/` - High level end-to-end tests in Go that exercise the entire system, installing test
      versions of the packages and asserting state on Windows and WSL instances.
 - `generate/` - Code generation support for things like Gettext-based translations in Go.
-- `gui/` - Flutter plugin and Graphical user interface for Ubuntu Pro for WSL.
+- `gui/` - Flutter plugin and Graphical user interface for the Ubuntu Pro app.
 - `img/` - Images used in the README.md file.
 - `launcher/` - C++ code for the `launcher` that hosts the `agent` under a pseudo console.
 - `mocks/` - Mock implementations of the gRPC and REST services for unit and integration testing.
