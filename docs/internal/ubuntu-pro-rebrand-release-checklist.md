@@ -92,10 +92,20 @@ release notes. Review localizations and platform wording before publication.
 - `golangci-lint` reported existing gosec/staticcheck findings and Windows gci
   formatting reports; this broad check did not pass. Recheck in the project CI
   environment before release.
-- On Windows `make` is unavailable. Initial WSL Markdown, Vale, spelling and
-  linkcheck attempts failed because the documentation virtualenv was not yet
-  installed; Sphinx environment setup was still running at this handoff. Rerun
-  the documented checks and record their final results before release.
+- Windows lacks `make`. In WSL, `make -C docs html` built output but failed on
+  six last-updated Git warnings: the worktree `.git` file contains a Windows
+  path that WSL Git cannot resolve. Targeted `vale` and `spelling` with
+  `CHECK_PATH=explanation/pro-explanation.md` passed.
+- WSL `make -C docs lint-md` failed: source MD032 findings in
+  `howto/custom-rootfs-multiple-targets.md:20`,
+  `howto/data-science-and-engineering.md:107`, `howto/run-workflows-azure.md:59`,
+  `reference/actions.md:17`, and `reference/landscape_config.md:39`, plus MD023
+  in `internal/go-standards.md:80`. Comparison with `rebrand` confirms those
+  lines predate this change. Generated `_build` files also produced MD032 and
+  MD014 findings; they are not source changes. Do not repair unrelated baseline.
+- WSL `make -C docs linkcheck` failed on one external link:
+  `howto/data-science-and-engineering.md:111`, `https://askubuntu.com/` returned
+  HTTP 403. Recheck network access before release.
 - The current `winget show` reports 1.1.1, moniker `ubuntu-pro`, and a historical
   `UbuntuProForWSL.msixbundle` URL. Keep that old URL; only future bundle URLs use
   `UbuntuPro.msixbundle`.
