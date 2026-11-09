@@ -5,7 +5,7 @@
 The guides in this section will help you to complete specific tasks with Ubuntu
 on WSL.
 
-They include guides on the Ubuntu distribution and the Ubuntu Pro for WSL
+They include guides on the Ubuntu distribution and the Ubuntu Pro app
 application.
 
 ## Installation and setup
@@ -21,7 +21,7 @@ index-setup
 
 ## Remote deployment
 
-Use the Pro for WSL application to remotely manage Ubuntu on WSL.
+Use the Ubuntu Pro app to remotely manage Ubuntu on WSL.
 
 ```{toctree}
 :titlesonly:

@@ -2,7 +2,7 @@
 myst:
   html_meta:
     "description lang=en":
-      "Reference information on firewall rules required for the operation of Ubuntu Pro for WSL."
+      "Reference information on firewall rules required for the operation of the Ubuntu Pro app."
 ---
 
 (ref::firewall)=
@@ -13,7 +13,7 @@ myst:
     :end-before: <!-- Include end pro -->
 ```
 
-Firewall rules must be configured for Ubuntu Pro for WSL to operate fully.
+Firewall rules must be configured for the Ubuntu Pro app to operate fully.
 
 The following figure shows the possible connections between the different components and their default ports and protocols:
 
@@ -44,7 +44,7 @@ stateDiagram-v2
 ```
 
 
-This table lists the default ports and protocols used by Pro for WSL:
+This table lists the default ports and protocols used by the Ubuntu Pro app:
 
 | Description | Client System | Server System | Protocol | Default Port | Target address |
 |-------------|---------------|---------------|----------|--------------|----------------|
@@ -57,8 +57,8 @@ This table lists the default ports and protocols used by Pro for WSL:
 
 If the client system is behind a proxy, ensure that the proxy is configured to allow the required connections.
 
-[^1]: [Access to the Microsoft Store](https://learn.microsoft.com/en-us/windows/privacy/manage-windows-11-endpoints) is only required for online installations of Ubuntu that use the Microsoft Store. Without the Microsoft Store, Pro for WSL will still be functional. As outlined in the [installation guide](howto::install-ubuntu-wsl), you can install Ubuntu 20.04 LTS or later from the terminal without the Microsoft Store and you can install official instances of Ubuntu downloaded from [releases.ubuntu.com](https://releases.ubuntu.com). You can also manage installations centrally from Landscape using [custom tarballs](howto::custom-distro).
+[^1]: [Access to the Microsoft Store](https://learn.microsoft.com/en-us/windows/privacy/manage-windows-11-endpoints) is only required for online installations of Ubuntu that use the Microsoft Store. Without the Microsoft Store, the Ubuntu Pro app will still be functional. As outlined in the [installation guide](howto::install-ubuntu-wsl), you can install Ubuntu 20.04 LTS or later from the terminal without the Microsoft Store and you can install official instances of Ubuntu downloaded from [releases.ubuntu.com](https://releases.ubuntu.com). You can also manage installations centrally from Landscape using [custom tarballs](howto::custom-distro).
 
-[^2]: Access to the contract server and Landscape server is required for proper operation of Pro for WSL.
+[^2]: Access to the contract server and Landscape server is required for proper operation of the Ubuntu Pro app.
 
 [^3]: For air-gapped installation refer to the [Ubuntu Pro documentation](https://canonical-ubuntu-pro-client.readthedocs-hosted.com/en/latest/explanations/using_pro_offline/).

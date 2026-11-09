@@ -1,6 +1,6 @@
 (debugging-and-testing)=
 
-# Debugging and testing the Ubuntu Pro for WSL app
+# Debugging and testing the Ubuntu Pro app
 
 The reference material in this section is helpful for contributors when debugging the application
 and contributing code.

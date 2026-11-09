@@ -3,7 +3,7 @@
 # Installation and setup
 
 These guides show you how to set up WSL with an Ubuntu distribution and the
-Ubuntu Pro for WSL application.
+The Ubuntu Pro app.
 
 ## The Ubuntu distribution
 
@@ -19,7 +19,7 @@ Manage and configure Ubuntu instances <manage-and-configure>
 Automatic setup of Ubuntu with cloud-init <cloud-init>
 ```
 
-## The Ubuntu Pro for WSL application
+## The Ubuntu Pro app
 
 Secure and manage Ubuntu on WSL with an Ubuntu Pro subscription.
 
@@ -27,8 +27,8 @@ Secure and manage Ubuntu on WSL with an Ubuntu Pro subscription.
 :titlesonly:
 :maxdepth: 1
 
-Install Ubuntu Pro for WSL and add a Pro token <set-up-up4w>
+Install the Ubuntu Pro app and add a Pro token <set-up-up4w>
 Verify Pro subscription and attachment <verify-subscribe-attach>
-Uninstall Pro for WSL, Ubuntu distros, and WSL <uninstalling>
+Uninstall the Ubuntu Pro app, Ubuntu distros, and WSL <uninstalling>
 ```
 

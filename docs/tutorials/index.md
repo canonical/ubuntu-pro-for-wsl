@@ -3,7 +3,7 @@
 # Tutorials
 
 These tutorials guide you through setting up Ubuntu on WSL and using the Ubuntu
-Pro for WSL application.
+The Ubuntu Pro app.
 
 ## The Ubuntu distribution on WSL
 
@@ -22,10 +22,10 @@ the name of the Ubuntu distro during installation.
 Get started with Ubuntu on WSL for development <develop-with-ubuntu-wsl>
 ```
 
-## Ubuntu Pro for WSL
+## Ubuntu Pro app
 
 Pro is a subscription offered by Canonical that enhances the security of
-Ubuntu. The Ubuntu Pro for WSL application is separate to the Ubuntu distro, and
+Ubuntu. The Ubuntu Pro app is separate to the Ubuntu distro, and
 makes it easy to attach the subscription to all Ubuntu instances on a machine.
 
 The Pro app also integrates with Landscape, making it possible to remotely

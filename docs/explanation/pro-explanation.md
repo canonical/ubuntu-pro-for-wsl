@@ -2,21 +2,23 @@
 myst:
   html_meta:
     "description lang=en":
-      "A top-level explanation of the Ubuntu Pro for WSL application."
+      "A top-level explanation of the Ubuntu Pro app."
 ---
 
-# What is Ubuntu Pro for WSL?
+# What is the Ubuntu Pro app?
 
-Ubuntu Pro for WSL is a Windows application for securing and managing {term}`instances <instance>`
-of Ubuntu on WSL.
+The Ubuntu Pro app (formerly Ubuntu Pro for WSL) is a Windows application for
+securing and managing {term}`instances <instance>` of Ubuntu on WSL. It
+automates Ubuntu Pro attachment and Landscape configuration, but does not
+replace the Ubuntu Pro subscription or the Ubuntu Pro client inside each instance.
 
 It serves two primary functions:
 
 * Attaching Ubuntu instances to a {term}`Pro subscription <Ubuntu Pro>`
 * Configuring Ubuntu instances for management by Landscape
 
-This page includes a top-level explanation of Pro for WSL.
-More technical detail is provided in the page on Pro for WSL's
+This page includes a top-level explanation of the Ubuntu Pro app.
+More technical detail is provided in the page on the Ubuntu Pro app's
 [architecture](./ref-arch-explanation.md).
 
 ## Ubuntu Pro is a subscription service
@@ -36,10 +38,10 @@ Learn how to deploy WSL with Landscape SaaS in our [deployment
 tutorial](tut::deploy).
 ```
 
-In an enterprise scenario, the Pro for WSL application enables you to automate
+In an enterprise scenario, the Ubuntu Pro app enables you to automate
 Pro-attachment and Landscape-enrollment of Ubuntu instances organisation-wide.
 
-## Pro for WSL automates Pro-attachment
+## Ubuntu Pro app automates Pro-attachment
 
 WSL users often create multiple instances. For example, they might have an
 Ubuntu instance for web development projects and another instance for machine
@@ -60,14 +62,14 @@ they create an instance. Organisations could limit or prevent the creation of
 WSL instances, but then users will not have access to a powerful development
 tool on their Windows machine.
 
-When Pro for WSL is set up on a fleet of Windows machines, it means that any
+When the Ubuntu Pro app is set up on a fleet of Windows machines, it means that any
 Ubuntu instance in that fleet is automatically Pro-attached, and automatically
 gets the benefits associated with the Pro subscription. IT managers can then
 empower users to securely create as many WSL instances as they need.
 
 ## Landscape can manage Pro-attached instances
 
-When Pro for WSL is installed on a Windows machine, and a Pro subscription is
+When the Ubuntu Pro app is installed on a Windows machine, and a Pro subscription is
 attached, the application can be used to [configure
 Landscape](../howto/set-up-landscape-client.md).
 
@@ -84,18 +86,18 @@ managed WSL instances, refer to the [Landscape
 documentation](https://documentation.ubuntu.com/landscape/how-to-guides/wsl-integration/perform-common-tasks/).
 ```
 
-## Pro for WSL has a GUI interface for individual users
+## Ubuntu Pro app has a GUI interface for individual users
 
 The Windows application has a GUI interface that is convenient for adding a Pro
 subscription and entering a Landscape configuration.
 
 The GUI is especially useful for individuals who want to secure and manage a
-small number of machines, or for the testing of Pro for WSL features.
+small number of machines, or for the testing of the Ubuntu Pro app features.
 
 Enterprise users, especially system administrators, may wish to bypass the GUI
-completely, and instead configure Pro for WSL using the {term}`Windows registry`.
+completely, and instead configure the Ubuntu Pro app using the {term}`Windows registry`.
 
-## Pro for WSL has registry keys for enterprise users
+## Ubuntu Pro app has registry keys for enterprise users
 
 Pro tokens and Landscape configurations can also be applied to machines [using
 the Windows registry](../reference/windows_registry.md). Using the registry
@@ -103,20 +105,20 @@ makes it possible to Pro-attach and Landscape-enroll Windows machines at scale
 using a Windows remote management solution, like
 [Intune](https://www.microsoft.com/en-ie/security/business/microsoft-intune).
 
-When setting up Pro for WSL remotely, you need to ensure that Pro for WSL agent
+When setting up the Ubuntu Pro app remotely, you need to ensure that the Windows agent
 is running in the background. This can be done in a variety of ways, and we
 provide examples using Intune for [starting the agent remotely using the
 registry](../howto/enforce-agent-startup-remotely-registry.md) or by [through
 the use of a platform script](../howto/start-agent-remotely.md).
 
-## Do I need to use Pro for WSL?
+## Do I need to use the Ubuntu Pro app?
 
-Pro for WSL is useful when you need to automate Pro-attachment for multiple
+The Ubuntu Pro app is useful when you need to automate Pro-attachment for multiple
 Ubuntu instance, and/or you are interested in managing multiple instances of
 Ubuntu remotely.
 
 For everyone else, Ubuntu on WSL remains a fully-featured Ubuntu environment 
-whether Pro for WSL is installed or not.
+whether the Ubuntu Pro app is installed or not.
 
 If you want to leverage a free Pro subscription for a small number of
 instances, you can still [pro-attach Ubuntu instances

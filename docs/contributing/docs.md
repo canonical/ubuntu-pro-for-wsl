@@ -2,7 +2,7 @@
 myst:
   html_meta:
     "description lang=en":
-      "How to contribute to the Ubuntu on WSL and Ubuntu Pro for WSL documentation."
+      "How to contribute to the Ubuntu on WSL and the Ubuntu Pro app documentation."
 ---
 
 # Contributing to the documentation

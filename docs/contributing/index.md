@@ -42,7 +42,7 @@ for more information.
 
 ## Issues with WSL itself should be directed to Microsoft
 
-We accept any contributions relating to Ubuntu WSL and Pro for WSL. However, we
+We accept any contributions relating to Ubuntu WSL and the Ubuntu Pro app. However, we
 do not directly maintain WSL itself, which is a Microsoft product. If you have
 identified a problem or bug in WSL then file an issue in [Microsoft's WSL
 project repository](https://github.com/microsoft/WSL/issues/).
