@@ -1,6 +1,6 @@
 <#
 .Synopsis
-    Build and package the Ubuntu Pro for WSL MSIX package.
+    Build and package the Ubuntu Pro app MSIX package.
 .DESCRIPTION
     Two-phase build system:
     - Compile: Compiles all components (C++, Go, Flutter), patches XML manifests and places them into dist/<arch>/
@@ -170,7 +170,7 @@ function Edit-AppinstallerFile {
     $mainBundle = $doc.Root.Element($ns + "MainBundle")
     if ($mainBundle) {
         $mainBundle.SetAttributeValue("Version", $Version)
-        $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${Tag}/UbuntuProForWSL.msixbundle")
+        $mainBundle.SetAttributeValue("Uri", "https://github.com/canonical/ubuntu-pro-for-wsl/releases/download/${Tag}/UbuntuPro.msixbundle")
     }
     
     # Save changes to the destination folder rather than changing source files.

@@ -52,7 +52,7 @@ jobs:
           }
           Write-Host "Tag: $($release.tag_name)"
 
-          $bundle="UbuntuProForWSL.msixbundle"
+          $bundle="UbuntuPro.msixbundle"
           $targetAsset = $release.assets | Where-Object { $_.name -eq $bundle}
           if ($null -eq $targetAsset) {
               Write-Error "Asset $bundle not found in release."
