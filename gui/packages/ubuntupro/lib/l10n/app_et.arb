@@ -25,7 +25,7 @@
             }
         }
     },
-    "appTitle": "Ubuntu Pro WSL-i jaoks",
+    "appTitle": "Ubuntu Pro",
     "@appTitle": {},
     "tokenErrorEmpty": "Tunnusluba ei tohi jääda tühjaks",
     "@tokenErrorEmpty": {},

@@ -1,6 +1,6 @@
-# Ubuntu Pro for WSL - User Interface
+# Ubuntu Pro app - User Interface
 
-This is the territory of the GUI part of "Pro for WSL".
+This is the GUI of the Ubuntu Pro app for Windows, which configures Ubuntu instances on WSL.
 
 It is a Flutter monorepo split into separate packages:
 

@@ -21,7 +21,7 @@
     "@purchaseStatusNetwork": {},
     "landscapeSetupCustomHint": "Charger un fichier de configuration client Landscape personnalisé",
     "@landscapeSetupCustomHint": {},
-    "appTitle": "Ubuntu Pro pour WSL",
+    "appTitle": "Ubuntu Pro",
     "@appTitle": {},
     "agent": "Agent Ubuntu Pro d’arrière-plan",
     "@agent": {},

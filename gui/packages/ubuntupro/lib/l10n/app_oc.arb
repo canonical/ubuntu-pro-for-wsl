@@ -1,6 +1,6 @@
 {
     "tokenErrorInvalid": "Geton invalid",
-    "appTitle": "Ubuntu Pro per WSL",
+    "appTitle": "Ubuntu Pro",
     "tokenErrorEmpty": "Lo geton pòt pas void",
     "tokenValid": "Geton valid",
     "tokenInputTitle": "Ligar aquesta maquina",

@@ -13,7 +13,7 @@
     "landscapeConfigureButton": "Landscape konfigurieren",
     "attach": "Anbinden",
     "landscapeSetupManualHint": "Mit einem Landscape-Server registrieren",
-    "appTitle": "Ubuntu Pro für WSL",
+    "appTitle": "Ubuntu Pro",
     "tokenErrorInvalid": "Ungültiges Token",
     "tokenValid": "Gültiges Token",
     "agentStateCannotStart": "Ubuntu Pro-Hintergrundagent kann nicht gestartet werden.",

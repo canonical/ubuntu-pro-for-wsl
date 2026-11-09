@@ -1,9 +1,10 @@
 {
-    "appTitle": "Ubuntu Pro for WSL",
+    "appTitle": "Ubuntu Pro",
     "tokenErrorEmpty": "Token cannot be empty",
     "tokenErrorInvalid": "Invalid token",
     "tokenValid": "Valid token",
-    "tokenInputTitle": "Attach this machine",
+    "tokenInputTitle": "Configure Ubuntu Pro for your Ubuntu instances",
+  "@tokenInputTitle": {"description": "Heading for configuring the Ubuntu Pro subscription for Ubuntu instances through the Ubuntu Pro app and Ubuntu Pro client; a Microsoft Store purchase is one subscription source."},
     "tokenInputDescription": "Enter a token from {proLink} or your system administrator",
     "@tokenInputDescription": {
         "placeholders": {
@@ -32,8 +33,9 @@
     "agentStateQuerying": "Checking Ubuntu Pro background agent's state.",
     "agentStateUnreachable": "Attempting to recover Ubuntu Pro background agent.",
 
-    "proHeading": "Open source software security by the publishers of Ubuntu, now available on Windows. {aboutLink}",
+    "proHeading": "Automate Ubuntu Pro attachment for Ubuntu instances on WSL. Ubuntu Pro security services apply to those instances, not Windows. {aboutLink}",
     "@proHeading": {
+    "description": "The Ubuntu Pro app automates attachment of Ubuntu instances on WSL using the Ubuntu Pro client. The Ubuntu Pro subscription protects those instances, not Windows; a Microsoft Store purchase can provide a subscription.",
         "placeholders": {
             "aboutLink": {
                 "type": "String"
@@ -43,7 +45,8 @@
     "getUbuntuPro": "Get Ubuntu Pro",
     "learnMore": "Learn more",
 
-    "ubuntuProEnabled": "Ubuntu Pro is enabled on this machine",
+    "ubuntuProEnabled": "Ubuntu Pro is configured for your Ubuntu instances on WSL",
+  "@ubuntuProEnabled": {"description": "Status that the Ubuntu Pro app has configured the subscription for Ubuntu instances on WSL, not Windows; the Ubuntu Pro client applies it and the subscription may come from a Microsoft Store purchase."},
     "ubuntuProEnabledInfo": "All Ubuntu WSL instances have access to Ubuntu Pro security features.",
     "manageUbuntuPro": "Manage Ubuntu Pro subscription",
     "detachPro": "Detach Ubuntu Pro",

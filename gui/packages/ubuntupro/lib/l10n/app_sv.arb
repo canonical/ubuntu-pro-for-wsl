@@ -15,7 +15,7 @@
     "@statusBarAgentConnectingTooltip": {},
     "updatingSubscriptionInfo": "Uppdaterar abonnemangsinformation.",
     "@updatingSubscriptionInfo": {},
-    "appTitle": "Ubuntu Pro för WSL",
+    "appTitle": "Ubuntu Pro",
     "@appTitle": {},
     "tokenErrorEmpty": "Token får inte vara tom",
     "@tokenErrorEmpty": {},

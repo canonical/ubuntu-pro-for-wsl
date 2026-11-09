@@ -1,5 +1,5 @@
 {
-    "appTitle": "Ubuntu Pro untuk WSL",
+    "appTitle": "Ubuntu Pro",
     "tokenErrorInvalid": "Token tidak valid",
     "tokenInputHint": "Token",
     "agentStateUnknownEnv": "Status agen latar Ubuntu Pro tidak dapat diverifikasi. Periksa pengaturan lingkungan Anda.",

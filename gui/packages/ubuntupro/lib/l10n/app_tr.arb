@@ -1,6 +1,6 @@
 {
     "tokenInputHint": "Jeton",
-    "appTitle": "WSL için Ubuntu Pro",
+    "appTitle": "Ubuntu Pro",
     "tokenErrorEmpty": "Jeton boş olamaz",
     "tokenErrorInvalid": "Geçersiz jeton",
     "tokenValid": "Geçerli jeton",
