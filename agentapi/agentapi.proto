@@ -23,7 +23,7 @@ message LandscapeConfig {
 }
 
 message SubscriptionInfo {
-    string productId = 1;           // The ID of the Ubuntu Pro for WSL product on the Microsoft Store.
+    string productId = 1;           // The ID of the Ubuntu Pro app product on the Microsoft Store.
 
     oneof subscriptionType {
         Empty none = 2;             // There is no active subscription.

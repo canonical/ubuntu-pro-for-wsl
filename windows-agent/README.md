@@ -6,32 +6,32 @@ The Windows Agent is the component that runs on the host Windows machine.
 
 ### User commands
 
-#### ubuntu-pro-agent
+#### ubuntu-pro-agent.exe
 
-Ubuntu Pro for WSL agent
+Ubuntu Pro Windows agent
 
 ##### Synopsis
 
-Ubuntu Pro for WSL agent for managing your pro-enabled distro.
+Ubuntu Pro Windows agent manages Ubuntu instances on WSL.
 
 ```
-ubuntu-pro-agent COMMAND [flags]
+ubuntu-pro-agent.exe COMMAND [flags]
 ```
 
 ##### Options
 
 ```
   -c, --config string     configuration file path
-  -h, --help              help for ubuntu-pro-agent
+  -h, --help              help for ubuntu-pro-agent.exe
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### ubuntu-pro-agent clean
+#### ubuntu-pro-agent.exe clean
 
 Removes all the agent's data and exits
 
 ```
-ubuntu-pro-agent clean [flags]
+ubuntu-pro-agent.exe clean [flags]
 ```
 
 ##### Options
@@ -47,13 +47,13 @@ ubuntu-pro-agent clean [flags]
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### ubuntu-pro-agent completion
+#### ubuntu-pro-agent.exe completion
 
 Generate the autocompletion script for the specified shell
 
 ##### Synopsis
 
-Generate the autocompletion script for ubuntu-pro-agent for the specified shell.
+Generate the autocompletion script for ubuntu-pro-agent.exe for the specified shell.
 See each sub-command's help for details on how to use the generated script.
 
 
@@ -70,7 +70,7 @@ See each sub-command's help for details on how to use the generated script.
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### ubuntu-pro-agent completion bash
+#### ubuntu-pro-agent.exe completion bash
 
 Generate the autocompletion script for bash
 
@@ -83,23 +83,23 @@ If it is not installed already, you can install it via your OS's package manager
 
 To load completions in your current shell session:
 
-	source <(ubuntu-pro-agent completion bash)
+	source <(ubuntu-pro-agent.exe completion bash)
 
 To load completions for every new session, execute once:
 
 ###### Linux:
 
-	ubuntu-pro-agent completion bash > /etc/bash_completion.d/ubuntu-pro-agent
+	ubuntu-pro-agent.exe completion bash > /etc/bash_completion.d/ubuntu-pro-agent.exe
 
 ###### macOS:
 
-	ubuntu-pro-agent completion bash > $(brew --prefix)/etc/bash_completion.d/ubuntu-pro-agent
+	ubuntu-pro-agent.exe completion bash > $(brew --prefix)/etc/bash_completion.d/ubuntu-pro-agent.exe
 
 You will need to start a new shell for this setup to take effect.
 
 
 ```
-ubuntu-pro-agent completion bash
+ubuntu-pro-agent.exe completion bash
 ```
 
 ##### Options
@@ -116,7 +116,7 @@ ubuntu-pro-agent completion bash
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### ubuntu-pro-agent completion fish
+#### ubuntu-pro-agent.exe completion fish
 
 Generate the autocompletion script for fish
 
@@ -126,17 +126,17 @@ Generate the autocompletion script for the fish shell.
 
 To load completions in your current shell session:
 
-	ubuntu-pro-agent completion fish | source
+	ubuntu-pro-agent.exe completion fish | source
 
 To load completions for every new session, execute once:
 
-	ubuntu-pro-agent completion fish > ~/.config/fish/completions/ubuntu-pro-agent.fish
+	ubuntu-pro-agent.exe completion fish > ~/.config/fish/completions/ubuntu-pro-agent.exe.fish
 
 You will need to start a new shell for this setup to take effect.
 
 
 ```
-ubuntu-pro-agent completion fish [flags]
+ubuntu-pro-agent.exe completion fish [flags]
 ```
 
 ##### Options
@@ -153,7 +153,7 @@ ubuntu-pro-agent completion fish [flags]
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### ubuntu-pro-agent completion powershell
+#### ubuntu-pro-agent.exe completion powershell
 
 Generate the autocompletion script for powershell
 
@@ -163,14 +163,14 @@ Generate the autocompletion script for powershell.
 
 To load completions in your current shell session:
 
-	ubuntu-pro-agent completion powershell | Out-String | Invoke-Expression
+	ubuntu-pro-agent.exe completion powershell | Out-String | Invoke-Expression
 
 To load completions for every new session, add the output of the above command
 to your powershell profile.
 
 
 ```
-ubuntu-pro-agent completion powershell [flags]
+ubuntu-pro-agent.exe completion powershell [flags]
 ```
 
 ##### Options
@@ -187,7 +187,7 @@ ubuntu-pro-agent completion powershell [flags]
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### ubuntu-pro-agent completion zsh
+#### ubuntu-pro-agent.exe completion zsh
 
 Generate the autocompletion script for zsh
 
@@ -202,23 +202,23 @@ to enable it.  You can execute the following once:
 
 To load completions in your current shell session:
 
-	source <(ubuntu-pro-agent completion zsh)
+	source <(ubuntu-pro-agent.exe completion zsh)
 
 To load completions for every new session, execute once:
 
 ###### Linux:
 
-	ubuntu-pro-agent completion zsh > "${fpath[1]}/_ubuntu-pro-agent"
+	ubuntu-pro-agent.exe completion zsh > "${fpath[1]}/_ubuntu-pro-agent.exe"
 
 ###### macOS:
 
-	ubuntu-pro-agent completion zsh > $(brew --prefix)/share/zsh/site-functions/_ubuntu-pro-agent
+	ubuntu-pro-agent.exe completion zsh > $(brew --prefix)/share/zsh/site-functions/_ubuntu-pro-agent.exe
 
 You will need to start a new shell for this setup to take effect.
 
 
 ```
-ubuntu-pro-agent completion zsh [flags]
+ubuntu-pro-agent.exe completion zsh [flags]
 ```
 
 ##### Options
@@ -235,12 +235,12 @@ ubuntu-pro-agent completion zsh [flags]
   -v, --verbosity count   issue INFO (-v), DEBUG (-vv) or DEBUG with caller (-vvv) output
 ```
 
-#### ubuntu-pro-agent version
+#### ubuntu-pro-agent.exe version
 
 Returns version of agent and exits
 
 ```
-ubuntu-pro-agent version [flags]
+ubuntu-pro-agent.exe version [flags]
 ```
 
 ##### Options

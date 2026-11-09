@@ -147,7 +147,7 @@ func (x *LandscapeConfig) GetConfig() string {
 
 type SubscriptionInfo struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
-	ProductId string                 `protobuf:"bytes,1,opt,name=productId,proto3" json:"productId,omitempty"` // The ID of the Ubuntu Pro for WSL product on the Microsoft Store.
+	ProductId string                 `protobuf:"bytes,1,opt,name=productId,proto3" json:"productId,omitempty"` // The ID of the Ubuntu Pro app product on the Microsoft Store.
 	// Types that are valid to be assigned to SubscriptionType:
 	//
 	//	*SubscriptionInfo_None

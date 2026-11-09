@@ -38,11 +38,11 @@ msgid "Returns version of agent and exits"
 msgstr ""
 
 #: cmd/ubuntu-pro-agent/agent/agent.go:68
-msgid "Ubuntu Pro for WSL agent"
+msgid "Ubuntu Pro Windows agent"
 msgstr ""
 
 #: cmd/ubuntu-pro-agent/agent/agent.go:69
-msgid "Ubuntu Pro for WSL agent for managing your pro-enabled distro."
+msgid "Ubuntu Pro Windows agent manages Ubuntu instances on WSL."
 msgstr ""
 
 #: cmd/ubuntu-pro-agent/agent/config.go:69

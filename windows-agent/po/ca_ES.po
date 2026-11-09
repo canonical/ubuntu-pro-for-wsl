@@ -2,15 +2,15 @@
 # Copyright (C) 2023 THE ubuntu-pro'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the ubuntu-pro-for-wsl package.
 # Canonical, 2023.
-#
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: ubuntu-pro\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-03-28 14:36:24PO-Revision-Date: YEAR-MO-DA HO:"
-"MI+ZONE\n"
-"PO-Revision-Date: 2023-03-28 14:36:24PO-Revision-Date: YEAR-MO-DA HO:"
-"MI+ZONE\n"
+"HO:MI+ZONE\n"
+"PO-Revision-Date: 2023-03-28 14:36:24PO-Revision-Date: YEAR-MO-DA "
+"HO:MI+ZONE\n"
 "Last-Translator: Edu Gómez Escandell <edu.gomez.escandell@canonical.com>\n"
 "Language-Team: none\n"
 "Language: ca\n"
@@ -43,11 +43,11 @@ msgid "Returns version of agent and exits"
 msgstr "Retorna la versió de l'agent i surt"
 
 #: cmd/ubuntu-pro-agent/agent/agent.go:68
-msgid "Ubuntu Pro for WSL agent"
+msgid "Ubuntu Pro Windows agent"
 msgstr ""
 
 #: cmd/ubuntu-pro-agent/agent/agent.go:69
-msgid "Ubuntu Pro for WSL agent for managing your pro-enabled distro."
+msgid "Ubuntu Pro Windows agent manages Ubuntu instances on WSL."
 msgstr ""
 
 #: cmd/ubuntu-pro-agent/agent/config.go:69

@@ -12,7 +12,7 @@ WSL Pro Service
 
 ##### Synopsis
 
-WSL Pro Service connects Ubuntu Pro for WSL agent to your distro.
+WSL Pro Service connects the Ubuntu Pro Windows agent to Ubuntu instances on WSL.
 
 ```
 wsl-pro-service COMMAND [flags]

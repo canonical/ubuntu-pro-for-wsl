@@ -44,3 +44,15 @@ Existing translations of these explanatory keys have not been changed or reviewe
 | `uk` | `tokenInputTitle`, `proHeading`, `ubuntuProEnabled` | Pending translation and review |
 | `zh` | `tokenInputTitle`, `proHeading`, `ubuntuProEnabled` | Pending translation and review |
 | `zh_TW` | `tokenInputTitle`, `proHeading`, `ubuntuProEnabled` | Pending translation and review |
+
+## CLI gettext handoff
+
+The Windows agent runs on the Windows host and manages Ubuntu instances on WSL.
+`wsl-pro-service` runs inside those instances and connects them to the agent.
+These descriptions refer to components of the Ubuntu Pro app, not to the Ubuntu
+Pro subscription or the Ubuntu Pro client.
+
+The `ca_ES` catalog has untranslated changed descriptions for the Windows agent
+short and long help and the WSL service long help. Translate and review those
+messages before release; the generated template is the source for any other
+locale translations. No human translation review is claimed.
