@@ -19,7 +19,7 @@
     "agentStateStarting": "Ubuntu Pro 背景代理程式正在啟動。",
     "purchaseStatusServer": "Microsoft Store 發生問題，請稍後再試。",
     "agentStateUnknownEnv": "Ubuntu Pro 背景代理程式狀態無法驗證。請檢查您的環境設定。",
-    "appTitle": "適用於 WSL 的 Ubuntu Pro",
+    "appTitle": "Ubuntu Pro",
     "tokenErrorEmpty": "Token 不能為空",
     "tokenErrorInvalid": "無效 token",
     "tokenValid": "有效 token",

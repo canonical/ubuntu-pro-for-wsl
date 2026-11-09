@@ -42,7 +42,7 @@
         }
     },
     "purchaseStatusNetwork": "Проблема з мережею завадила продовжити покупку. Повторіть спробу після під'єднання.",
-    "appTitle": "Ubuntu Pro для WSL",
+    "appTitle": "Ubuntu Pro",
     "tokenErrorEmpty": "Токен не може бути порожнім",
     "tokenErrorInvalid": "Недійсний токен",
     "tokenValid": "Дійсний токен",

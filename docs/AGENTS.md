@@ -1,12 +1,12 @@
-# Ubuntu Pro for WSL documentation agent guide
+# Ubuntu Pro app documentation agent guide
 
 This guide applies to any work under `docs/`. Repository-level, code-specific instructions can be found in `../AGENTS.md`.
 
 ## What this documentation is
 
-The Ubuntu Pro for WSL documentation is a Sphinx project that uses MyST Markdown, `canonical-sphinx`, and the extensions listed in `requirements.txt`. The docs are hosted using Read the Docs, which builds based on `.readthedocs.yaml`.
+The Ubuntu Pro app documentation is a Sphinx project that uses MyST Markdown, `canonical-sphinx`, and the extensions listed in `requirements.txt`. The docs are hosted using Read the Docs, which builds based on `.readthedocs.yaml`.
 
-The documentation includes information about the Ubuntu distribution for WSL, as well as the Ubuntu Pro for WSL application.
+The documentation includes information about the Ubuntu distribution for WSL, as well as the Ubuntu Pro app (formerly Ubuntu Pro for WSL), which currently supports Windows and Ubuntu on WSL.
 
 The content follows the [Diátaxis](https://diataxis.fr/) framework:
 

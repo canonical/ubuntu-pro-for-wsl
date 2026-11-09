@@ -10,7 +10,7 @@
     "agentStateInvalid": "Ожидание инициализации Фонового агента Ubuntu Pro.",
     "purchaseStatusAlreadyPurchased": "Вы уже подписаны на Pro.",
     "agentStateUnknownEnv": "Состояние Фонового агента Ubuntu Pro не может быть проверено. Проверьте настройки среды.",
-    "appTitle": "Ubuntu Pro для WSL",
+    "appTitle": "Ubuntu Pro",
     "landscapeFQDNError": "Недопустимое FQDN. Ожидается полное доменное имя или IP-адрес.",
     "statusBarAgentDownTooltip": "Агент Ubuntu Pro отключен. Нажмите для запуска агента.",
     "tokenInputTitle": "Привязать эту машину",

@@ -9,7 +9,7 @@
     "purchaseStatusNetwork": "Un problema de red impidió que se proceda la compra. Intente de nuevo una vez esté conectado.",
     "landscapeSkip": "Descartar por ahora",
     "getUbuntuPro": "Obtener Ubuntu Pro",
-    "appTitle": "Ubuntu Pro para WSL",
+    "appTitle": "Ubuntu Pro",
     "tokenErrorEmpty": "El token no puede estar vacío",
     "tokenErrorInvalid": "Token no válido",
     "tokenValid": "Token válido",
