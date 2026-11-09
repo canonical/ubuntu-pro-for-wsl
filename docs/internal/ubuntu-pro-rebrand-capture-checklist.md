@@ -8,7 +8,7 @@ Use a test environment and English UI. Capture the full app window, including it
 
 1. `docs/assets/token-input-placeholder.png`: start with no configured Pro token.
    Open the app and capture the token entry screen with the field empty and the
-   new explanatory copy visible.
+   existing design-approved copy visible.
 2. `docs/assets/status-complete.png`: configure a test subscription token in the
    app, confirm, and capture the completed status screen with the Landscape and
    detach controls visible. Do not expose the token.
@@ -29,5 +29,5 @@ Before sharing, inspect every frame for tokens, usernames, hostnames, account
 information, notifications and other personal data. Use empty or fictional
 values; crop unrelated desktop content without obscuring the app title or state.
 Supply the five files at the paths above for visual review. Confirm the title,
-current explanatory copy and intended state in each image; verify animation
+existing design-approved copy and intended state in each image; verify animation
 frames, readability and privacy before replacing existing assets.

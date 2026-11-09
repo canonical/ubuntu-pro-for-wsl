@@ -32,8 +32,8 @@ release notes. Review localizations and platform wording before publication.
 - [ ] Recheck the final integrated diff for technical identity and release artifacts.
   Keep package names, commands, protocol fields, gettext domain, registry paths,
   `UP4W` identifiers, links and historical downloads unchanged.
-- [ ] Complete and review all affected explanatory translations before release;
-  the user owns this gate. See `rebranding-translations.md` for locale/key and
+- [ ] Complete and review the changed CLI gettext descriptions before release;
+  the user owns this gate. See `rebranding-translations.md` for locale and
   gettext context. Mechanical changes are not human review.
 
 ## User-owned publication steps
