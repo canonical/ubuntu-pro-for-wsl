@@ -40,7 +40,7 @@ type Server struct {
 }
 
 // SystemError is an error caused by a misconfiguration of the system, rather than
-// originated from Ubuntu Pro for WSL.
+// originated from the Ubuntu Pro Windows agent.
 type SystemError struct {
 	error
 }
