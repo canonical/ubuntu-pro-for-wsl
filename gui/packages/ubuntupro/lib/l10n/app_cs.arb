@@ -1,5 +1,5 @@
 {
-    "appTitle": "Ubuntu Pro pro WSL",
+    "appTitle": "Ubuntu Pro",
     "statusBarAgentConnectingTooltip": "Připojování k agentu Ubuntu Pro…",
     "agentStateInvalid": "Čeká se na inicializaci agenta pro Ubuntu Pro (na pozadí).",
     "landscapeFQDNLabel": "Landscape FQDN",

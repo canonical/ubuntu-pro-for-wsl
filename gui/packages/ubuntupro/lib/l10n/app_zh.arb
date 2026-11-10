@@ -31,7 +31,7 @@
     "purchaseStatusUnknown": "在购买订阅的过程中出现未知错误。请考虑重新启动此应用。",
     "landscapeFileTooLarge": "配置文件过大",
     "landscapeSetupCustomHint": "加载自定义 Landscape 客户端配置文件",
-    "appTitle": "适用于 WSL 的 Ubuntu Pro",
+    "appTitle": "Ubuntu Pro",
     "tokenErrorEmpty": "令牌不能为空",
     "tokenErrorInvalid": "无效令牌",
     "tokenValid": "令牌有效",

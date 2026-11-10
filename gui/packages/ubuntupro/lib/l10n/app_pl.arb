@@ -13,7 +13,7 @@
     },
     "purchaseStatusSuccess": "Dziękujemy za subskrypcję Ubuntu Pro.",
     "@purchaseStatusSuccess": {},
-    "appTitle": "Ubuntu Pro dla WSL",
+    "appTitle": "Ubuntu Pro",
     "@appTitle": {},
     "tokenErrorEmpty": "Token nie może być pusty",
     "@tokenErrorEmpty": {},

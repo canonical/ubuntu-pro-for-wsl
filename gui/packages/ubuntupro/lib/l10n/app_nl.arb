@@ -17,7 +17,7 @@
     "@purchaseStatusAlreadyPurchased": {},
     "landscapeSSLKeyLabel": "Openbare SSL-sleutel van de server (optioneel)",
     "@landscapeSSLKeyLabel": {},
-    "appTitle": "Ubuntu Pro voor WSL",
+    "appTitle": "Ubuntu Pro",
     "@appTitle": {},
     "tokenErrorEmpty": "Token kan niet leeg zijn",
     "@tokenErrorEmpty": {},
