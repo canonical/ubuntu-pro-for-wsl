@@ -22,7 +22,7 @@ var (
 	// testImagePath is the path to the test image.
 	testImagePath string
 
-	// msixPath is the path to the Ubuntu Pro for WSL MSIX.
+	// msixPath is the path to the Ubuntu Pro app MSIX.
 	msixPath string
 
 	// debPkgPath is the path to the Wsl Pro Service Debian package.
@@ -56,7 +56,7 @@ const (
 	// referenceImage is the WSL distro image that will be used to generate the test image.
 	referenceImage = "ubuntu.wsl"
 
-	// up4wMsixPackage is the Ubuntu Pro for WSL package.
+	// up4wMsixPackage is the Ubuntu Pro app package.
 	up4wMsixPackage = "CanonicalGroupLimited.UbuntuPro"
 )
 
