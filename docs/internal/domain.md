@@ -186,7 +186,9 @@ A *Pro token* grants access to the subscription's services.
 
 ### Ubuntu Pro app
 
-The application running on the host that automates *Ubuntu Pro* attachment and *Landscape* enrollment of Ubuntu child instances. It currently
+Named *Ubuntu Pro*; *app* or *application* follows it in prose when disambiguation from the *Ubuntu
+Pro* subscription is needed. The application running on the host that automates *Ubuntu Pro*
+attachment and *Landscape* enrollment of Ubuntu child instances. It currently
 supports Windows hosts and Ubuntu on WSL: its components include the *Windows agent*, *Launcher*,
 *GUI*, and *wsl-pro-service*, which invokes the *Ubuntu Pro client* in each distro instance.
 
