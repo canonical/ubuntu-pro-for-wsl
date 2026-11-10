@@ -100,5 +100,18 @@
     "landscapeAccountNameLabel": "Hesap adı",
     "landscapeDetails": "Detaylar",
     "landscapeChangeLaterHint": "Ayarları istediğiniz zaman değiştirebilirsiniz.",
-    "landscapeProceedAnyway": "Yine de devam et"
+    "landscapeProceedAnyway": "Yine de devam et",
+    "landscapeAccountNameError": "Kullanıcı adı boş veya \"{reservedAccount}\" olamaz.",
+    "@landscapeAccountNameError": {
+        "placeholders": {
+            "reservedAccount": {
+                "type": "String"
+            }
+        }
+    },
+    "landscapeProceedAnywayHint": "Devam edebilirsiniz; Landscape sunucusuna bağlanma denemeleri arka planda devam edecek.",
+    "landscapeEditYourConfig": "Yapılandırmanızı düzenleyin",
+    "landscapeInvalidConfig": "Landscape yapılandırması geçersiz",
+    "landscapeInvalidConfigContent": "Sunucu, gönderilen yapılandırmayı reddetti. Lütfen ayarlarınızı doğrulayın.",
+    "landscapeUnchangedConfig": "Değiştirilmemiş yapılandırma"
 }
