@@ -1,12 +1,12 @@
-﻿# Ubuntu Pro for WSL
+﻿# Ubuntu Pro app
 
-**Ubuntu Pro for WSL** is a Windows application that automates the attachment of your Ubuntu Pro subscription. It solves the problem of needing to manually Pro-attach each new Ubuntu instance created on a Windows machine when you want the security benefits of Ubuntu Pro. For organisations, it enables automated Pro-attachment at scale for fleets of devices.
+**Ubuntu Pro app**, formerly Ubuntu Pro for WSL, is a Windows application that automates the attachment of your Ubuntu Pro subscription. It solves the problem of needing to manually Pro-attach each new Ubuntu instance created on a Windows machine when you want the security benefits of Ubuntu Pro. For organisations, it enables automated Pro-attachment at scale for fleets of devices.
 
-## Basic usage of Ubuntu Pro for WSL
+## Basic usage of the Ubuntu Pro app
 
-_Pro for WSL is distributed as an MSIX, designed to run as a per-user application. When installed via Chocolatey, it's added to the system's base image, thereby all users on the same device can access the app independently._
+_The Ubuntu Pro app is distributed as an MSIX, designed to run as a per-user application. When installed via Chocolatey, it's added to the system's base image, thereby all users on the same device can access the app independently._
 
-After installation, open the application and enter your Ubuntu Pro token.
+Ubuntu Pro is a subscription service separate from the app. Installing the app does not grant a subscription. Users can access and manage their subscription via [https://ubuntu.com/pro/dashboard](https://ubuntu.com/pro/dashboard). After installation, open the application and enter your Ubuntu Pro token.
 
 _If you are a system administrator, you can also use the Windows registry to add a Pro token. After the Ubuntu Pro app has run at least once, the relevant key will be available as `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro`. The Pro token can be added as data for the `UbuntuProToken` value._
 
@@ -23,7 +23,7 @@ pro status
 Our [official documentation](https://ubuntu.com/wsl/docs/stable/) includes tutorials, guides, references, and explanations on both:
 
 * The Ubuntu on WSL distribution
-* The Ubuntu Pro for WSL application
+* The Ubuntu Pro app
 
 Documentation is maintained in the `docs` directory of the project repository. It is written in markdown, built with Sphinx, and published on [Read the Docs](https://about.readthedocs.com/).
 
