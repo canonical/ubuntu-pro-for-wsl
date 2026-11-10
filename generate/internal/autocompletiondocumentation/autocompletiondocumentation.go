@@ -235,7 +235,7 @@ func genManPages(cmds []cobra.Command, dir string) {
 		_, _ = cmd.ExecuteC()
 		opts := doc.GenManTreeOptions{
 			Header: &doc.GenManHeader{
-				Title: fmt.Sprintf("Ubuntu Pro for WSL: %s", cmd.Name()),
+				Title: fmt.Sprintf("Ubuntu Pro app: %s", cmd.Name()),
 			},
 			Path: out,
 		}

@@ -57,7 +57,7 @@
     "@landscapeSetupCustom": {},
     "agentStateQuerying": "Ubuntu Pro 백그라운드 에이전트 상태 확인 중.",
     "@agentStateQuerying": {},
-    "appTitle": "WSL용 Ubuntu Pro",
+    "appTitle": "Ubuntu Pro",
     "@appTitle": {},
     "attach": "등록",
     "@attach": {},

@@ -1,4 +1,4 @@
-# Ubuntu on WSL and Ubuntu Pro for WSL
+# Ubuntu on WSL and the Ubuntu Pro app
 
 [![Code quality](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/qa.yaml/badge.svg?branch=main)](https://github.com/canonical/ubuntu-pro-for-wsl/actions/workflows/qa.yaml?query=event%3Apush)
 [![Code coverage](https://codecov.io/gh/canonical/ubuntu-pro-for-wsl/branch/main/graph/badge.svg)](https://codecov.io/gh/canonical/ubuntu-pro-for-wsl)
@@ -6,13 +6,13 @@
 
 ## Contents
 
-1. [Ubuntu on WSL](#ubuntu-on-wsl)  
-2. [Ubuntu Pro for WSL](#ubuntu-pro-for-wsl)  
-3. [Basic usage of Ubuntu on WSL](#basic-usage-of-ubuntu-on-wsl)  
-4. [Basic usage of Ubuntu Pro for WSL](#basic-usage-of-ubuntu-pro-for-wsl)  
-5. [System components of the Pro for WSL app](#system-components-of-the-pro-for-wsl-app)  
-6. [Documentation](#documentation)  
-7. [Contribute](#contribute)  
+1. [Ubuntu on WSL](#ubuntu-on-wsl)
+2. [Ubuntu Pro app](#ubuntu-pro-app)
+3. [Basic usage of Ubuntu on WSL](#basic-usage-of-ubuntu-on-wsl)
+4. [Basic usage of the Ubuntu Pro app](#basic-usage-of-the-ubuntu-pro-app)
+5. [System components of the Ubuntu Pro app](#system-components-of-the-ubuntu-pro-app)
+6. [Documentation](#documentation)
+7. [Contribute](#contribute)
 8. [Project and community](#project-and-community)
 
 
@@ -32,21 +32,23 @@ OS, it's a fast way of setting up a powerful development environment.
 
 ![Demo of Ubuntu on WSL](./img/readme-distro.gif)
 
-## Ubuntu Pro for WSL
+## Ubuntu Pro app
 
 <p align="center">
-  <a href="https://ubuntu.com/wsl/docs/stable/tutorials/getting-started-with-up4w/">Get started with Ubuntu Pro for WSL</a> •
+  <a href="https://ubuntu.com/wsl/docs/stable/tutorials/getting-started-with-up4w/">Get started with the Ubuntu Pro app</a> •
   <a href="https://ubuntu.com/wsl/docs/stable/howto/enforce-agent-startup-remotely-registry/">Remotely enforce startup of Pro agent</a> •
   <a href="https://ubuntu.com/pro/subscribe">Get an Ubuntu Pro subscription</a>
 </p>
 
-**Ubuntu Pro for WSL** is a separate Windows application that automates the
-attachment of your Ubuntu Pro subscription. It solves the problem of needing to
+**The Ubuntu Pro app** (formerly Ubuntu Pro for WSL) is a Windows application
+that automates Ubuntu Pro attachment and Landscape configuration for Ubuntu
+instances on WSL. It does not replace the Ubuntu Pro subscription or the
+Ubuntu Pro client running inside each instance. It solves the problem of needing to
 manually Pro-attach each new Ubuntu instance created on a Windows machine when
 you want the security benefits of Ubuntu Pro. For organisations, it enables
 automated Pro-attachment at scale for fleets of devices.
 
-![Demo of Ubuntu Pro for WSL](./img/readme-pro.gif)
+![Demo of the Ubuntu Pro app](./img/readme-pro.gif)
 
 > [!TIP]
 > You can get a [free Pro subscription for up to 5 machines](https://ubuntu.com/pro/subscribe).
@@ -86,9 +88,9 @@ Then you can use that instance just like any other Ubuntu machine, for writing
 code, running scripts, and even [opening Linux GUI
 apps](https://ubuntu.com/wsl/docs/stable/howto/data-science-and-engineering/).
 
-## Basic usage of Ubuntu Pro for WSL
+## Basic usage of the Ubuntu Pro app
 
-Find and install the Ubuntu Pro for WSL application in the Microsoft Store.
+Find and install the Ubuntu Pro app in the Microsoft Store.
 
 After installation, open the application and enter your Ubuntu Pro token.
 
@@ -106,9 +108,9 @@ You can confirm this in any Ubuntu instance with:
 pro status
 ```
 
-## System components of the Ubuntu Pro for WSL app
+## System components of the Ubuntu Pro app
 
-This repository contains the source code for Ubuntu Pro for WSL.
+This repository contains the source code for the Ubuntu Pro app.
 
 The application consists of the following components:
 
@@ -124,7 +126,7 @@ Our [official documentation](https://ubuntu.com/wsl/docs/stable/)
 includes tutorials, guides, references, and explanations on both:
 
 * The Ubuntu on WSL distribution
-* The Ubuntu Pro for WSL application
+* The Ubuntu Pro app
 
 Documentation is maintained in the `docs` directory of this repository. It is
 written in markdown, built with Sphinx, and published on [Read the

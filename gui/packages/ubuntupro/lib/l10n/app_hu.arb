@@ -3,7 +3,7 @@
     "updatingSubscriptionInfo": "Az előfizetési információk frissítése.",
     "purchaseStatusSuccess": "Köszönjük, hogy előfizetett az Ubuntu Pro szolgáltatásra.",
     "landscapeSkip": "Kihagyás most",
-    "appTitle": "Ubuntu Pro a WSL-hez",
+    "appTitle": "Ubuntu Pro",
     "tokenErrorEmpty": "A token nem lehet üres",
     "tokenErrorInvalid": "Érvénytelen token",
     "tokenValid": "Érvényes token",

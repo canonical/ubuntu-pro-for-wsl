@@ -1,6 +1,6 @@
 {
     "updatingSubscriptionInfo": "Ενημέρωση πληροφοριών του συνδρομητή.",
-    "appTitle": "Ubuntu Pro για WSL",
+    "appTitle": "Ubuntu Pro",
     "proHeading": "Το ελεύθερο λογισμικό ασφαλείας από τους κατασκευαστές του Ubuntu, τώρα και σε Windows.{aboutLink}",
     "@proHeading": {
         "placeholders": {

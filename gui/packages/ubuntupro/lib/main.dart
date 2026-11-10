@@ -47,8 +47,7 @@ Future<void> main() async {
     center: true,
   );
 
-  Logger('main')
-      .info('Starting Ubuntu Pro for WSL app with settings $settings');
+  Logger('main').info('Starting Ubuntu Pro app with settings $settings');
   await windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();

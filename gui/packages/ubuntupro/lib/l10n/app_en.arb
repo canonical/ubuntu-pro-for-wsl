@@ -1,5 +1,5 @@
 {
-    "appTitle": "Ubuntu Pro for WSL",
+    "appTitle": "Ubuntu Pro",
     "tokenErrorEmpty": "Token cannot be empty",
     "tokenErrorInvalid": "Invalid token",
     "tokenValid": "Valid token",
