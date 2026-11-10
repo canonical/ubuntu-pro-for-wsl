@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Ubuntu Pro for WSL is made of two main components: the application, which runs on the Windows host, and the `wsl-pro-service`,
+The Ubuntu Pro app is composed of two parts: its host background agent, and the `wsl-pro-service`,
 which runs within instances of Ubuntu on WSL. When referring to supported versions, both components must be considered
 separately. We currently provide security updates for:
 
@@ -28,15 +28,15 @@ other channels, as well as on the project's
 
 ## What qualifies as a security issue
 
-Pro for WSL operates within the security context of the authenticated Windows user. By design, the
+The Ubuntu Pro app operates within the security context of the authenticated user in the host operating system. By design, the
 application runs with standard user privileges and does not require administrative elevation. While the local
 user maintains full access to their own application data, cross-user data access is strictly
 prohibited.
 
-A vulnerability is classified as a security issue if a flaw in Pro for WSL, or its underlying
+A vulnerability is classified as a security issue if a flaw in the Ubuntu Pro app, or its underlying
 dependencies, enables any of the following:
 * **Privilege Escalation**: Gaining higher-level system permissions than those assigned.
-* **Unauthorized Access**: Modifying or exfiltrating Pro for WSL data by non-privileged or secondary users.
+* **Unauthorized Access**: Modifying or exfiltrating the Ubuntu Pro app data by non-privileged or secondary users.
 * **Denial of Service (DoS)**: Compromising system availability or integrity.
 
 Any behaviour meeting these criteria must be documented and reported through the established
@@ -46,7 +46,7 @@ security channels for immediate investigation.
 
 If you discover a security vulnerability within this repository, we encourage
 responsible disclosure. Please report any security issues to help us keep
-`Ubuntu Pro for WSL` secure for everyone.
+the Ubuntu Pro app secure for everyone.
 
 ### Private vulnerability reporting
 
@@ -55,7 +55,7 @@ The most straightforward way to report a security vulnerability is through
 instructions, please review the
 [Privately reporting a security vulnerability](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability)
 documentation. This method enables you to communicate vulnerabilities directly
-and confidentially with the `Ubuntu Pro for WSL` maintainers.
+and confidentially with the Ubuntu Pro app maintainers.
 
 The project's admins will be notified of the issue and will work with you to
 determine whether the issue qualifies as a security issue and, if so, in which
@@ -67,7 +67,7 @@ contains more information about what you can expect when you contact us, and wha
 
 #### Steps to report a vulnerability on GitHub
 
-1. Go to the [Security Advisories Page](https://github.com/canonical/ubuntu-pro-for-wsl/security/advisories) of the `Ubuntu Pro for WSL` repository.
+1. Go to the [Security Advisories Page](https://github.com/canonical/ubuntu-pro-for-wsl/security/advisories) of the Ubuntu Pro app repository.
 2. Click "Report a Vulnerability"
 3. Provide detailed information about the vulnerability, including steps to reproduce, affected versions, and potential impact.
 
