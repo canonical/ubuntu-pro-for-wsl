@@ -6,22 +6,22 @@ myst:
 ---
 
 (windows-registry)=
-# The Windows registry and the Ubuntu Pro application
+# The Windows registry and the {{ application_name }} application
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```
 
-The {term}`Windows registry` is a database provided by Windows where programs can read and write information. The Ubuntu Pro app uses it as a read-only source of configuration.
+The {term}`Windows registry` is a database provided by Windows where programs can read and write information. The {{ application_name }} app uses it as a read-only source of configuration.
 > See more:
 [Microsoft Learn | Windows registry information for advanced users](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/windows-registry-advanced-users)
 
-In the Ubuntu Pro app, you can use the Windows registry to supply the configuration for Ubuntu Pro and Landscape to the [{term}`Windows agent`].
+In the {{ application_name }} app, you can use the Windows registry to supply the configuration for Ubuntu Pro and Landscape to the [{term}`Windows agent`].
 
-> See more: [install the Ubuntu Pro app and add a Pro token](howto::config-up4w)
+> See more: [install the {{ application_name }} app and add a Pro token](howto::config-up4w)
 
-![Screenshot of the Windows registry showing how to edit the Landscape configuration for the Ubuntu Pro app](./assets/windows-registry.png)
+![Screenshot of the Windows registry showing how to edit the Landscape configuration for the {{ application_name }} app](./assets/windows-registry.png)
 
 ## Expected contents of the UbuntuPro registry key
 

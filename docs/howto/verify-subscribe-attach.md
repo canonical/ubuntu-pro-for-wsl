@@ -5,24 +5,24 @@ myst:
       "The Ubuntu Pro app automatically attaches your Pro subscription to instances of Ubuntu on WSL. It's easy to confirm that your subscription is active and that instances are Pro-attaching."
 ---
 
-# Verify active Pro subscription and automatic Pro attachment with the Ubuntu Pro app
+# Verify active Pro subscription and automatic Pro attachment with the {{ application_name }} app
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```
 
-If you have just installed and configured the Ubuntu Pro app and a verification step is failing,
+If you have just installed and configured the {{ application_name }} app and a verification step is failing,
 wait for a few seconds and try again. The process should not take longer than a minute.
 
 (howto::verify-pro-sub)=
 ## Pro subscription
 
-After installing the Ubuntu Pro app on a Windows machine and entering your token you should see a confirmation that your Pro subscription is active:
+After installing the {{ application_name }} app on a Windows machine and entering your token you should see a confirmation that your Pro subscription is active:
 
 ![Confirmation in graphical interface that subscription is active.](../assets/status-complete.png)
 
-Find and run _the Ubuntu Pro app_ from the Windows start menu at any time and the app will confirm whether you are subscribed.
+Find and run _the {{ application_name }} app_ from the Windows start menu at any time and the app will confirm whether you are subscribed.
 
 (howto::verify-pro-attach)=
 ## Pro-attachment
@@ -44,7 +44,7 @@ wsl ~ -d Ubuntu-26.04
 ```
 
 You will now be logged in to the new instance shell and can
-check that the Ubuntu Pro app has Pro-attached this instance with:
+check that the {{ application_name }} app has Pro-attached this instance with:
 
 ```{terminal}
 :prompt: $

@@ -199,7 +199,7 @@ example — an Ubuntu Server, it does not apply to Ubuntu on WSL.
 
 > [GitHub repo for the WSL kernel](https://github.com/microsoft/WSL2-Linux-Kernel)
 
-## The Ubuntu Pro application
+## The {{ application_name }} application
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
@@ -208,15 +208,15 @@ example — an Ubuntu Server, it does not apply to Ubuntu on WSL.
 
 ### Automatic Pro-attachment
 
-For Pro-attaching multiple instances automatically, use the Ubuntu Pro app.
+For Pro-attaching multiple instances automatically, use the {{ application_name }} app.
 This is most relevant for deployment scenarios in which multiple Windows hosts
 are being managed centrally, using software like Landscape or Intune.
 
-> [Get started with the Ubuntu Pro app](tut::up4w)
+> [Get started with the {{ application_name }} app](tut::up4w)
 
 ### Firewall configuration
 
-Firewall rules must be configured for the Ubuntu Pro app to enable interactions
+Firewall rules must be configured for the {{ application_name }} app to enable interactions
 with different services, including Landscape and the Microsoft Store.
 
 Any exchanges of data are encrypted using TLS.
@@ -231,8 +231,8 @@ The legacy version — WSL 1 — can also still be used.
 
 > [Read more about WSL versions](explanation::wsl-version)
 
-The Ubuntu Pro app only supports WSL 2.
-When relying on the Ubuntu Pro app to manage the security of WSL instances,
+The {{ application_name }} app only supports WSL 2.
+When relying on the {{ application_name }} app to manage the security of WSL instances,
 you should therefore consider enforcing WSL 2 on host Windows machines.
 
 To set the default version to WSL 2:
@@ -278,9 +278,9 @@ Intune also supports policies for WSL, which include toggling the availability o
 
 > [Intune configuration options for WSL](https://learn.microsoft.com/en-us/windows/wsl/intune?source=recommendations)
 
-### Cryptography used by the Ubuntu Pro app
+### Cryptography used by the {{ application_name }} app
 
-The use of cryptography in the Ubuntu Pro app starts at installation time: an MSIX package can only be
+The use of cryptography in the {{ application_name }} app starts at installation time: an MSIX package can only be
 installed on Windows if it's signed by a trusted source. Even when downloading the MSIX from GitHub
 releases or from the Canonical website, the binary package is signed by Microsoft Store, thus no
 security exceptions are required when installing the application.
@@ -298,15 +298,15 @@ to use a custom certificate issued for that server or even plain TCP, although t
 discouraged for security reasons and unlikely to be useful in real scenarios, other than local
 testing. For more information refer to [the Landscape configuration reference page](howto::config-landscape).
 
-All cryptographic functionalities used by the Ubuntu Pro app are provided by the Go standard
+All cryptographic functionalities used by the {{ application_name }} app are provided by the Go standard
 library `crypto` and its supplementary `golang.org/x/crypto` modules.
 
 ### Decommissioning
 
-To support remote configuration and sharing of certain files between the system components, the Ubuntu Pro app
+To support remote configuration and sharing of certain files between the system components, the {{ application_name }} app
 relies on non-virtualised access to the Windows registry `HKCU` hive and the user's profile
 directory. For that reason, uninstalling the MSIX may leave behind unwanted data in both
-locations. Refer to our guidance on [uninstalling the Ubuntu Pro app](howto::uninstall-up4w) for how to complete a
+locations. Refer to our guidance on [uninstalling the {{ application_name }} app](howto::uninstall-up4w) for how to complete a
 secure clean-up.
 
 ## Security tips
@@ -410,7 +410,7 @@ It is expected that most users will SSH from WSL rather than SSH into WSL.
 
 ### Remote management tools
 
-The Ubuntu Pro app increases the capacity of system administrators to manage
+The {{ application_name }} app increases the capacity of system administrators to manage
 and secure Windows hosts containing instances of Ubuntu on WSL.
 
 Learn more about remote management of Ubuntu on WSL in this documentation:
@@ -424,7 +424,7 @@ Details on the security updates that we provide and the responsible disclosure
 of security vulnerabilities for the Ubuntu distribution on WSL can be found
 below:
 
-* [Security policy for the Ubuntu Pro app](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/SECURITY.md)
+* [Security policy for the {{ application_name }} app](https://github.com/canonical/ubuntu-pro-for-wsl/blob/main/SECURITY.md)
 * [Security policy for the Ubuntu distro on WSL](https://github.com/ubuntu/WSL/blob/main/SECURITY.md)
 
 ## Resources

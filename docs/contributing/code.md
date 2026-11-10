@@ -7,9 +7,9 @@ myst:
 
 # Contributing to the code
 
-We anticipate that most code contributions will be for the Ubuntu Pro app.
+We anticipate that most code contributions will be for the {{ application_name }} app.
 
-The source for the Ubuntu Pro app code can be found on GitHub:
+The source for the {{ application_name }} app code can be found on GitHub:
 
 - [github.com/canonical/ubuntu-pro-for-wsl](https://github.com/canonical/ubuntu-pro-for-wsl)
 
@@ -18,13 +18,13 @@ below.
 
 ## Prerequisite: a Windows machine
 
-To test and debug Ubuntu on WSL and the Ubuntu Pro app you will need a Windows
+To test and debug Ubuntu on WSL and the {{ application_name }} app you will need a Windows
 machine with WSL installed.
 
 It is possible to run Ubuntu on WSL in a VM with nested visualisation but we do
 not recommend this as a testing environment.
 
-## Additional dependencies for the Ubuntu Pro app
+## Additional dependencies for the {{ application_name }} app
 
 * Ubuntu 26.04 LTS installed in WSL
 * Visual Studio Community 2022 or above
@@ -32,7 +32,7 @@ not recommend this as a testing environment.
 * Flutter
 * An Ubuntu Pro token
 
-## The test suite for the Ubuntu Pro app
+## The test suite for the {{ application_name }} app
 
 The source code includes a comprehensive test suite made of unit and integration tests. All the tests must pass with and without the race detector.
 
@@ -40,7 +40,7 @@ Each module has its own package tests and you can also find the integration test
 
 The test suite must pass before merging the PR to our main branch. Any new feature, change or fix must be covered by corresponding tests.
 
-## Building and running the binaries for the Ubuntu Pro app
+## Building and running the binaries for the {{ application_name }} app
 
 For building, you can use the following two scripts:
 
@@ -51,9 +51,9 @@ For building, you can use the following two scripts:
 You'll need to [create a self-signing certificate](https://learn.microsoft.com/en-us/windows/msix/package/create-certificate-package-signing) to build the Windows Agent.
 :::
 
-## Install individual components of the Ubuntu Pro app for development
+## Install individual components of the {{ application_name }} app for development
 
-This guide will show you how to install the Ubuntu Pro app for local development and testing.
+This guide will show you how to install the {{ application_name }} app for local development and testing.
 
 **Requirements:**
 
@@ -77,7 +77,7 @@ Notice that, for the step above, there is also an alternative version of the MSI
 
 This is the Windows-side agent that manages the distros.
 
-1. Uninstall the Ubuntu Pro app if you had installed previously:
+1. Uninstall the {{ application_name }} app if you had installed previously:
 
     ```{terminal}
     :prompt: PS>
@@ -135,9 +135,9 @@ This is the Linux-side component that talks to the agent. Choose one or more dis
     systemctl status wsl-pro.service
     ```
 
-## Restart the Ubuntu Pro app during development
+## Restart the {{ application_name }} app during development
 
-Some configuration changes only apply when you restart the Ubuntu Pro app. Here is a guide on how to restart it. There are two options.
+Some configuration changes only apply when you restart the {{ application_name }} app. Here is a guide on how to restart it. There are two options.
 
 ### Option 1: Restart the Windows host machine
 
@@ -186,9 +186,9 @@ This is the simple one. If you're not in a hurry to see the configuration update
     4. Click on "Click to restart it".
 8. Start the distro, or distros you installed WSL-Pro-Service in.
 
-## Access the Ubuntu Pro app logs for debugging
+## Access the {{ application_name }} app logs for debugging
 
-At some point you may want to read the Ubuntu Pro app logs, most likely for debugging purposes. The agent and the service store their logs separately. This guide shows you where to find each of the logs.
+At some point you may want to read the {{ application_name }} app logs, most likely for debugging purposes. The agent and the service store their logs separately. This guide shows you where to find each of the logs.
 
 ### Access the logs for the WSL Pro service
 
@@ -216,11 +216,11 @@ To access the logs for the Windows Agent:
 2. In the `.ubuntupro` folder, find file `log` and open it with any text editor.
    - This file contains the logs sorted with the oldest entries at the top and the newest at the bottom.
 
-## Enable opt-in features of the Ubuntu Pro app during development
+## Enable opt-in features of the {{ application_name }} app during development
 
-Some features in the Ubuntu Pro app are opt-in or can be toggled on and off via the Windows Registry.
+Some features in the {{ application_name }} app are opt-in or can be toggled on and off via the Windows Registry.
 While the code is arranged such that CI always tests with those features enabled,
-when running the Ubuntu Pro app on your machine, you may need to toggle them on and off
+when running the {{ application_name }} app on your machine, you may need to toggle them on and off
 explicitly via the Windows registry. This guide shows you how to do that.
 
 ### Enable subscribing via the Microsoft Store
@@ -250,9 +250,9 @@ Landscape' button.
 If that value is not present or set to anything other than `0`, Landscape configuration page
 and related buttons will be visible.
 
-## Reset the Ubuntu Pro app to factory settings
+## Reset the {{ application_name }} app to factory settings
 
-You can reset the Ubuntu Pro app to factory settings following these steps:
+You can reset the {{ application_name }} app to factory settings following these steps:
 
 1. Shut down WSL
 

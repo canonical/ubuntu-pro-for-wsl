@@ -173,7 +173,7 @@ Virtual Hard Disk
     requirements of that instance.
 
 Windows agent
-    The Ubuntu Pro app component that communicates and coordinates its other
+    The {{ application_name }} app component that communicates and coordinates its other
     components on Windows.
 
     Related topic(s): {term}`Ubuntu Pro for WSL`, {term}`WSL Pro service`

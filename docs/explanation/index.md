@@ -3,12 +3,12 @@
 # Explanation
 
 This section contains explanations that will help you develop a deeper
-understanding of how the Ubuntu distro on WSL and the Ubuntu Pro app
+understanding of how the Ubuntu distro on WSL and the {{ application_name }} app
 are designed and secured.
 
-## Ubuntu Pro app
+## {{ application_name }} app
 
-Understand the Ubuntu Pro app, its components, and how they work together.
+Understand the {{ application_name }} app, its components, and how they work together.
 
 ```{toctree}
 :titlesonly:

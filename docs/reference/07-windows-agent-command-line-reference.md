@@ -2,7 +2,7 @@
 myst:
   html_meta:
     "description lang=en":
-      "Command line reference for Ubuntu Pro for WSL's Windows agent."
+      "Command line reference for the Ubuntu Pro app's Windows agent."
 ---
 
 # Windows Agent CLI
@@ -12,7 +12,7 @@ myst:
     :end-before: <!-- Include end dev -->
 ```
 
-> See first: [Pro for WSL - {term}`Windows agent`]
+> See first: [Ubuntu Pro app - {term}`Windows agent`]
 
 
 ## Usage

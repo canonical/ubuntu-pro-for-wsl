@@ -7,7 +7,7 @@ myst:
 ---
 
 (tut::up4w)=
-# Get started with the Ubuntu Pro app
+# Get started with the {{ application_name }} app
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
@@ -15,13 +15,13 @@ myst:
 ```
 
 Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) is an easy and fast way to run Ubuntu on a Windows machine.
-The Ubuntu Pro app (formerly Ubuntu Pro for WSL) automates attachment of Ubuntu
+The {{ application_name }} app (formerly Ubuntu Pro for WSL) automates attachment of Ubuntu
 instances on WSL to your [Ubuntu Pro](https://ubuntu.com/pro) subscription and
 can configure Landscape. It does not replace the subscription or the Ubuntu Pro
 client inside each instance.
 Developers get to use Ubuntu WSL while benefiting from the stability, security and compliance offered by Ubuntu Pro.
 
-In this tutorial you will learn how to install the Ubuntu Pro app on Windows and verify that Ubuntu WSL instances are Pro-attaching.
+In this tutorial you will learn how to install the {{ application_name }} app on Windows and verify that Ubuntu WSL instances are Pro-attaching.
 You should then be ready for more advanced usage scenarios.
 
 ```{include} ../includes/prompt_symbols_notice.txt
@@ -31,8 +31,8 @@ You should then be ready for more advanced usage scenarios.
 
 ## What you will do
 
-- Install the Ubuntu Pro app
-- Configure the Ubuntu Pro app with a Pro token
+- Install the {{ application_name }} app
+- Configure the {{ application_name }} app with a Pro token
 - Test automatic Pro-attachment of WSL instances
 
 (ref::backup-warning)=
@@ -57,7 +57,7 @@ Read our [guidance on backup and restore](howto::backup).
 
 ## Set up Ubuntu on WSL
 
-To use the Ubuntu Pro app, you need WSL installed and enabled on your machine, and at least
+To use the {{ application_name }} app, you need WSL installed and enabled on your machine, and at least
 one instance of Ubuntu on WSL.
 
 (tut::get-wsl)=
@@ -75,7 +75,7 @@ wsl --install
 You may need to reboot the Windows machine for the changes to take effect.
 
 Global configuration settings for WSL may block the communication between
-the Ubuntu Pro app and instances of Ubuntu on WSL. If you already have WSL
+the {{ application_name }} app and instances of Ubuntu on WSL. If you already have WSL
 installed, with `~\.wslconfig` on your system, we recommend that you back up the
 file, then remove it, before continuing the tutorial.
 For more information about `.wslconfig`, refer to the [WSL documentation from Microsoft](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#wslconfig).
@@ -126,7 +126,7 @@ wsl -l -v
 :class: warning
 
 WSL 2 is the default architecture on recent versions of Windows and
-is required for the Ubuntu Pro app to function.
+is required for the {{ application_name }} app to function.
 Read more about the [differences between WSL versions](explanation::wsl-version).
 ```
 
@@ -134,10 +134,10 @@ To manually associate this Ubuntu instance with a Pro subscription, you could
 launch the instance and run the `pro attach` command.
 
 This, however, would need to be repeated manually for each new instance.
-The Ubuntu Pro app solves this scalability problem by automating Pro-attachment.
+The {{ application_name }} app solves this scalability problem by automating Pro-attachment.
 Next, let's take a look at how that works in practice.
 
-## Set up the Ubuntu Pro app
+## Set up the {{ application_name }} app
 
 (tut::get-ubuntu-pro)=
 ### Get an Ubuntu Pro token
@@ -149,30 +149,30 @@ Your subscription token can be retrieved from the [Ubuntu Pro Dashboard](https:/
 Visit the [Ubuntu Pro](https://ubuntu.com/pro/subscribe) page if you need a new subscription.
 The `Myself` option for a personal subscription is free for up to 5 machines. 
 
-Once you have a token you are ready to install the Ubuntu Pro app.
+Once you have a token you are ready to install the {{ application_name }} app.
 
 (tut::get-up4w)=
-### Install and configure the Ubuntu Pro app
+### Install and configure the {{ application_name }} app
 
-The Ubuntu Pro app can be installed from [ubuntu.com/desktop/wsl](https://ubuntu.com/desktop/wsl).
+The {{ application_name }} app can be installed from [ubuntu.com/desktop/wsl](https://ubuntu.com/desktop/wsl).
 
 ```{admonition} Other installation methods
 :class: tip
 The app can also be installed using WinGet and the Microsoft Store.
 
-Read our dedicated [Ubuntu Pro app installation guide](howto::install-up4w).
+Read our dedicated [{{ application_name }} app installation guide](howto::install-up4w).
 ```
 
 Once installed, open the application and paste the token you copied from the Ubuntu Pro dashboard:
 
-![Main screen of the Ubuntu Pro app GUI](../assets/token-input-placeholder.png)
+![Main screen of the {{ application_name }} app GUI](../assets/token-input-placeholder.png)
 
 After you confirm, a status screen will appear showing that configuration is complete:
 
 ![Configuration is complete](../assets/status-complete.png)
 
-Done! You can close the Ubuntu Pro app window before continuing.
-If at any time you want to detach your Pro subscription just open the Ubuntu Pro app
+Done! You can close the {{ application_name }} app window before continuing.
+If at any time you want to detach your Pro subscription just open the {{ application_name }} app
 and select **Detach Ubuntu Pro**.
 
 The app is now configured with your token. It uses the Ubuntu Pro client to
@@ -193,7 +193,7 @@ you installed previously, entering a username and password when prompted.
 wsl ~ -d Ubuntu-26.04
 ```
 
-You will now be logged in to the Ubuntu instance and can check that the Ubuntu Pro app has Pro-attached this instance with:
+You will now be logged in to the Ubuntu instance and can check that the {{ application_name }} app has Pro-attached this instance with:
 
 ```{terminal}
 :prompt: $
@@ -264,26 +264,26 @@ After this instance has installed and launched, enter a username and password, t
 
 You should again get confirmation of successful Pro-attachment for the new instance.
 
-> If you want to uninstall the Ubuntu Pro app after this tutorial refer to [our how-to guide](../howto/uninstalling.md).
+> If you want to uninstall the {{ application_name }} app after this tutorial refer to [our how-to guide](../howto/uninstalling.md).
 
 ## Next steps
 
-This is only the start of what you can do with the Ubuntu Pro app.
+This is only the start of what you can do with the {{ application_name }} app.
 
 If you need to create and manage large numbers of Ubuntu WSL instances
 you will probably want to use the Windows registry for installing the Pro app.
 By using the Windows registry you can associate a Pro token with
 each new WSL instance using your organisation's own deployment solution.
 
-> For detailed step-by-step instructions on using the Windows registry read our short guide on how to [install and configure the Ubuntu Pro app](../howto/set-up-up4w.md).
+> For detailed step-by-step instructions on using the Windows registry read our short guide on how to [install and configure the {{ application_name }} app](../howto/set-up-up4w.md).
 
-Landscape support is also built-in to the Ubuntu Pro app.
+Landscape support is also built-in to the {{ application_name }} app.
 With a single configuration file, you can create and manage
 multiple WSL instances that will automatically be registered
 with your Landscape server.
 
-> For more information, please refer to our guide on how to [deploy WSL instances with the Ubuntu Pro app and Landscape](tut::deploy).
+> For more information, please refer to our guide on how to [deploy WSL instances with the {{ application_name }} app and Landscape](tut::deploy).
 
 Our documentation includes several other [how-to guides](../howto/index)
 for completing specific tasks, [reference](../reference/index) material
-describing key information relating to the Ubuntu Pro app.
+describing key information relating to the {{ application_name }} app.

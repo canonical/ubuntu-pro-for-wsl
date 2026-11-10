@@ -12,10 +12,10 @@ developers to run a GNU/Linux environment on Windows. The Ubuntu distribution
 for WSL is tightly integrated with the Windows OS, supporting features
 including remote development with popular IDEs and cross-OS file management.
 
-The [Ubuntu Pro app](./explanation/pro-explanation) is a tool for managing
+The [{{ application_name }} app](./explanation/pro-explanation) is a tool for managing
 Ubuntu on WSL. It enables automatic attachment of your Pro subscription
 to Ubuntu instances, and remote deployment with Landscape. If you are responsible for a fleet of Windows
-devices, the Ubuntu Pro app helps you monitor, customize, and secure WSL at scale.
+devices, the {{ application_name }} app helps you monitor, customize, and secure WSL at scale.
 
 Ubuntu on WSL provides a fully-featured Ubuntu experience on Windows, suitable
 for learning Linux, developing a personal open-source project, or building for

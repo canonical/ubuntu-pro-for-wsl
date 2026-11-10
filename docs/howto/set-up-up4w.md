@@ -6,23 +6,23 @@ myst:
       "The Ubuntu Pro app is a Windows application that automatically attaches your Ubuntu Pro subscription to instances of Ubuntu on WSL."
 ---
 
-# Install the Ubuntu Pro app and add a Pro token
+# Install the {{ application_name }} app and add a Pro token
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```
 
-To install the Ubuntu Pro app, you need Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
+To install the {{ application_name }} app, you need Windows 11 (recommended) or Windows 10 with minimum version 21H2 on a physical machine
 
 To configure your Ubuntu instances to Pro-attach, you must have an {term}`Ubuntu Pro token`.
 
 If necessary, you can verify that your [firewall rules are correctly set up](../reference/firewall_requirements.md).
 
 (howto::install-up4w)=
-## Install the Ubuntu Pro app
+## Install the {{ application_name }} app
 
-The Ubuntu Pro app can be installed from the Ubuntu website, the Microsoft Store, or using WinGet.
+The {{ application_name }} app can be installed from the Ubuntu website, the Microsoft Store, or using WinGet.
 
 `````{tab-set}
 ````{tab-item} Ubuntu website
@@ -54,7 +54,7 @@ winget install --source winget Canonical.UbuntuProforWSL
 (howto::config-up4w)=
 ## Choose a configuration method
 
-After installing the Ubuntu Pro app, the application can be configured in two ways:
+After installing the {{ application_name }} app, the application can be configured in two ways:
 
 - The **Windows registry**: useful for automating deployment at scale
 - The application's **graphical interface**: convenient option for individual users
@@ -65,7 +65,7 @@ After installing the Ubuntu Pro app, the application can be configured in two wa
 
 ## Set up the key and values
 
-First, ensure that the Ubuntu Pro app has run at least once after installation.
+First, ensure that the {{ application_name }} app has run at least once after installation.
 This guarantees that the key and values necessary for configuration are set up
 in the registry.
 
@@ -88,11 +88,11 @@ Navigate to the `HKEY_CURRENT_USER\Software\Canonical\UbuntuPro` key.
 Locate the {guilabel}`UbuntuProToken` value and enter your Pro token in the
 {guilabel}`Value data` field.
 
-After configuration using the Windows Registry, the status in the Ubuntu Pro app will show that
+After configuration using the Windows Registry, the status in the {{ application_name }} app will show that
 the Pro subscription is active and managed by the user's organisation.
 
 Unlike configuration through the graphical interface, when the registry is used
-to configure the Ubuntu Pro app there is no option for the user to detach the Pro
+to configure the {{ application_name }} app there is no option for the user to detach the Pro
 subscription in the application:
 
 ![alt text](./assets/status-complete-registry.png)
@@ -104,7 +104,7 @@ subscription in the application:
 
 Enter your Ubuntu Pro token in the space provided:
 
-![Graphical interface of the Ubuntu Pro app with option to paste Pro token.](../assets/token-input-placeholder.png)
+![Graphical interface of the {{ application_name }} app with option to paste Pro token.](../assets/token-input-placeholder.png)
 
 Continue to the confirmation screen.
 

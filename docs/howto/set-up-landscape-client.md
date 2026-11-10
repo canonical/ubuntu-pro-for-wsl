@@ -5,7 +5,7 @@ myst:
       "The Landscape client in Ubuntu on WSL instances can be configured with the Ubuntu Pro app to support remote management and deployment."
 ---
 
-# Configure the Landscape client with the Ubuntu Pro application
+# Configure the Landscape client with the {{ application_name }} application
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
@@ -26,7 +26,7 @@ The {term}`Landscape client` can be configured in two ways:
 
 ## Access the registry
 
-First, ensure that the Ubuntu Pro app has run at least once after installation.
+First, ensure that the {{ application_name }} app has run at least once after installation.
 This guarantees that the key and values necessary for configuration will be set up
 in the registry.
 
@@ -56,9 +56,9 @@ automatically Pro-attaching WSL instances through Landscape.
 ````
 
 ````{tab-item} Configure with the graphical interface
-In the Ubuntu Pro app navigate to the Landscape configuration screen:
+In the {{ application_name }} app navigate to the Landscape configuration screen:
 
-![Main screen of the Ubuntu Pro app GUI](../assets/landscape-config-ui.png)
+![Main screen of the {{ application_name }} app GUI](../assets/landscape-config-ui.png)
 
 Choose your preferred configuration option and enter the required details.
 
@@ -104,7 +104,7 @@ This can be copied to a Windows machine:
 
 > C:\Users\\\<username>\landscape_server.pem
 
-The path can then be referenced during Landscape configuration in the Ubuntu Pro app.
+The path can then be referenced during Landscape configuration in the {{ application_name }} app.
 ```
 
 (howto::config-landscape-client)=

@@ -2,7 +2,7 @@
 myst:
   html_meta:
     "description lang=en":
-      "Command line reference for Ubuntu Pro for WSL's WSL Pro Service."
+      "Command line reference for the Ubuntu Pro app's WSL Pro Service."
 ---
 
 # WSL Pro Service CLI
@@ -12,7 +12,7 @@ myst:
     :end-before: <!-- Include end dev -->
 ```
 
-> See first: [Pro for WSL - {term}`WSL Pro service`]
+> See first: [Ubuntu Pro app - {term}`WSL Pro service`]
 
 ## Usage
 

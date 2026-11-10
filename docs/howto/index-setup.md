@@ -3,7 +3,7 @@
 # Installation and setup
 
 These guides show you how to set up WSL with an Ubuntu distribution and the
-Ubuntu Pro app.
+{{ application_name }} app.
 
 ## The Ubuntu distribution
 
@@ -19,7 +19,7 @@ Manage and configure Ubuntu instances <manage-and-configure>
 Automatic setup of Ubuntu with cloud-init <cloud-init>
 ```
 
-## The Ubuntu Pro application
+## The {{ application_name }} application
 
 Secure and manage Ubuntu on WSL with an Ubuntu Pro subscription.
 
