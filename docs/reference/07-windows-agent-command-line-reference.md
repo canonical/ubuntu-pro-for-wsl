@@ -21,11 +21,11 @@ myst:
 
 #### ubuntu-pro-agent
 
-Ubuntu Pro for WSL agent
+Ubuntu Pro host agent
 
 ##### Synopsis
 
-Ubuntu Pro for WSL agent for managing your pro-enabled distro.
+Ubuntu Pro host agent manages Ubuntu instances on WSL.
 
 ```
 ubuntu-pro-agent COMMAND [flags]

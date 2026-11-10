@@ -35,8 +35,8 @@ Key files include:
 
 Do not directly edit generated reference pages:
 
-- `reference/07-windows-agent-command-line-reference.md` is generated from the `agent`'s Cobra command definitions by `go generate ./windows-agent/generate`
-- `reference/08-wsl-pro-service-command-line-reference.md` is generated from `wsl-pro-service`'s Cobra command definitions by `go generate ./wsl-pro-service/generate`
+- `reference/07-windows-agent-command-line-reference.md` is generated from the `agent`'s Cobra command definitions by `go generate -tags tools ./windows-agent/generate`
+- `reference/08-wsl-pro-service-command-line-reference.md` is generated from `wsl-pro-service`'s Cobra command definitions by `go generate -tags tools ./wsl-pro-service/generate`
 
 ## Build and check
 
