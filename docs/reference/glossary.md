@@ -149,10 +149,11 @@ Ubuntu Pro client
 
     Related topic(s): {term}`Ubuntu Pro`, {term}`Ubuntu Pro for WSL`
 
+Ubuntu Pro app
 Ubuntu Pro for WSL
 Pro for WSL
-    A Windows application for automating Pro-attachment and configuring
-    Landscape-enrollment.
+    The application, formerly called Ubuntu Pro for WSL, for automating Pro-attachment and configuring
+    Landscape-enrollment of child instances of Ubuntu. It currently supports Ubuntu on WSL on Windows hosts.
 
     Related topic(s): {term}`Ubuntu Pro`, {term}`Windows agent`, {term}`WSL Pro service`
 
@@ -169,8 +170,8 @@ Virtual Hard Disk
     requirements of that instance.
 
 Windows agent
-    Pro for WSL's central hub that communicates and coordinates its various
-    components.
+    The Ubuntu Pro app component that communicates and coordinates its other
+    components on Windows.
 
     Related topic(s): {term}`Ubuntu Pro for WSL`, {term}`WSL Pro service`
 

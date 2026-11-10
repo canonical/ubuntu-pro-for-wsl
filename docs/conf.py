@@ -202,7 +202,7 @@ rediraffe_dir_only = True
 # <first sentence of home page>".
 llms_txt_description = textwrap.dedent(
     """\
-    This is the documentation for Ubuntu on WSL, the default Linux distribution for WSL, and the Pro for WSL application for managing and securing instances of Ubuntu on WSL.
+    This is the documentation for Ubuntu on WSL, the default Linux distribution for WSL, and the Ubuntu Pro app for managing and securing instances of Ubuntu on WSL.
     """
 )
 

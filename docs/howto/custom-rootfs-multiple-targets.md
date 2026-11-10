@@ -2,11 +2,11 @@
 myst:
   html_meta:
     "description lang=en":
-      "Scale up your deployment of a custom rootfs using Ubuntu Pro for WSL's Landscape integration."
+      "Scale up your deployment of a custom rootfs using the Ubuntu Pro app's Landscape integration."
 ---
 
 (howto::landscape-api)=
-# Deploy a custom rootfs to multiple Windows machines with Ubuntu Pro for WSL and the Landscape API
+# Deploy a custom rootfs to multiple Windows machines with the Ubuntu Pro app and the Landscape API
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
@@ -14,7 +14,7 @@ myst:
 ```
 
 This guide shows how to use the Landscape API to automate the deployment of a custom rootfs across multiple Windows machines.
-Scaled deployment is enabled by Ubuntu Pro for WSL, which ensures that Ubuntu WSL instances on Windows machines are automatically registered with {term}`Landscape`.
+Scaled deployment is enabled by the Ubuntu Pro app, which ensures that Ubuntu WSL instances on Windows machines are automatically registered with {term}`Landscape`.
 {term}`Cloud-init` is used for initialisation and final configuration of the {term}`instances <Instance>`.
 To follow the steps outlined in this guide you can use either:
 - Bash scripting on Linux, or
@@ -23,7 +23,7 @@ To follow the steps outlined in this guide you can use either:
 ## Prerequisites
 
 - A running self-hosted Landscape server version `24.10~beta.5` or later.
-- Multiple Windows machines [already registered with Landscape](howto::config-landscape) using Pro for WSL.
+- Multiple Windows machines [already registered with Landscape](howto::config-landscape) using the Ubuntu Pro app.
 - Make sure you have installed `curl` and `jq`, if you're following this guide using Bash.
 - Familiarity with Bash and/or PowerShell.
 

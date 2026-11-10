@@ -3,12 +3,12 @@
 # Explanation
 
 This section contains explanations that will help you develop a deeper
-understanding of how the Ubuntu distro on WSL and the Ubuntu Pro for WSL
-application are designed and secured.
+understanding of how the Ubuntu distro on WSL and the Ubuntu Pro app
+are designed and secured.
 
-## Ubuntu Pro for WSL
+## Ubuntu Pro app
 
-Understand Pro for WSL, its components, and how they work together.
+Understand the Ubuntu Pro app, its components, and how they work together.
 
 ```{toctree}
 :titlesonly:

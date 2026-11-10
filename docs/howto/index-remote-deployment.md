@@ -2,19 +2,19 @@
 
 # Remote deployment
 
-A key feature of Pro for WSL is that it enables deployment and management
+A key feature of the Ubuntu Pro application is that it enables deployment and management
 of WSL instances. For example, an administrator in an organization can remotely
 deploy custom Ubuntu configurations and images on multiple Windows machines,
 using tools like Landscape and Intune.
 
-These guides help you deploy and manage WSL instances using Ubuntu Pro for WSL
+These guides help you deploy and manage WSL instances using the Ubuntu Pro app
 with remote management tools. They are not intended to reflect full production
 deployments but provide guidance on key steps, which can be adapted to your
 specific production environments.
 
 ## Landscape
 
-Landscape is a systems administration tool from Canonical. Pro for WSL supports
+Landscape is a systems administration tool from Canonical. The Ubuntu Pro app supports
 Landscape natively and a Landscape client is installed in each Ubuntu instance.
 The guides below show you how to configure the Landscape client, and deploy WSL
 using the Landscape web portal or API.
@@ -31,8 +31,8 @@ Configure the Landscape client with the Pro app <set-up-landscape-client>
 ## Intune
 
 Intune is a cloud-based endpoint management tool from Microsoft. The guides
-below are focused on helping Intune administrators ensure that that the Ubuntu
-Pro for WSL's background agent is operating on remote Windows machines.
+below help Intune administrators ensure that the Ubuntu Pro app's background
+agent is operating on remote Windows machines.
 
 ```{toctree}
 :titlesonly:

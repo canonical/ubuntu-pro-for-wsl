@@ -2,21 +2,20 @@
 myst:
   html_meta:
     "description lang=en":
-      "Follow the steps to uninstall the Ubuntu Pro for WSL Windows application, Ubuntu on WSL instances and WSL itself."
+      "Follow the steps to uninstall the Ubuntu Pro app, Ubuntu on WSL instances and WSL itself."
 ---
 
-# Uninstall Ubuntu Pro for WSL, Ubuntu on WSL and WSL
+# Uninstall the Ubuntu Pro app, Ubuntu on WSL and WSL
 
-This page briefly outlines the steps required to uninstall {term}`Ubuntu Pro for WSL`,
+This page briefly outlines the steps required to uninstall the Ubuntu Pro app,
 Ubuntu distros, and WSL itself.
 
 (howto::uninstall-up4w)=
-## Ubuntu Pro for WSL
+## Ubuntu Pro app
 
-### Uninstall the Pro for WSL app
+### Uninstall the Ubuntu Pro application
 
-Go to `Settings > Apps > Installed Apps`, locate the "Ubuntu Pro for WSL"
-application, right-click on it and select **Uninstall**.
+Go to `Settings > Apps > Installed Apps`, locate the "Ubuntu Pro" application (formerly "Ubuntu Pro for WSL"), right-click on it and select **Uninstall**.
 
 If you installed the app using WinGet, you can instead run the following command in PowerShell:
 
@@ -27,7 +26,7 @@ If you installed the app using WinGet, you can instead run the following command
 winget uninstall Canonical.UbuntuProforWSL
 ```
 
-### Remove Pro for WSL data
+### Remove the Ubuntu Pro app data
 
 Remove `.ubuntupro` from your Windows user profile directory.
 

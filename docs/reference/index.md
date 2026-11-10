@@ -31,7 +31,7 @@ If you are interested in automated testing of applications in Ubuntu WSL, read:
 GitHub actions for Ubuntu WSL <actions>
 ```
 
-## Ubuntu Pro for WSL
+## Ubuntu Pro application
 
 Details on firewall configuration, Landscape setup and using the Windows
 registry.
@@ -42,7 +42,7 @@ registry.
 index_system_configuration
 ```
 
-Information helpful for developers working on Pro for WSL.
+Information helpful for developers working on the Ubuntu Pro app.
 
 ```{toctree}
 :titlesonly:
