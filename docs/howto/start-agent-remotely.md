@@ -2,10 +2,10 @@
 myst:
   html_meta:
     "description lang=en":
-      "Use Intune to enforce startup of the Ubuntu Pro app background agent to support zero-touch deployment at scale."
+      "Use Intune to enforce startup of the Ubuntu Pro host agent to support zero-touch deployment at scale."
 ---
 
-# Start the {{ application_name }} app background agent remotely with Intune
+# Start the {{ application_name }} app host agent remotely with Intune
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
@@ -19,9 +19,9 @@ operating system when the user interacts with the application for the first time
 end-users it presents a source of friction for deployments at scale, when system administrators expect zero-touch
 deployment of the {{ application_name }} app to just work.
 
-This guide shows how system administrators can leverage Windows remote management solutions to start the {{ application_name }} app background agent once
+This guide shows how system administrators can leverage Windows remote management solutions to start the {{ application_name }} app host agent once
 with user credentials, thus interacting with the application on the user's behalf. Subsequent logins will have the {{ application_name }} app
-background agent started automatically as a consequence of the interaction.
+host agent started automatically as a consequence of the interaction.
 
 While this guide uses Intune, readers can translate the steps for the remote management solution of their
 choice, as long as the said solution can run scripts with current user's credentials.
@@ -33,17 +33,17 @@ choice, as long as the said solution can run scripts with current user's credent
 
 ## Overview
 
-1. Running a script as user to start the {{ application_name }} app background agent makes it immediately available.
+1. Running a script as user to start the {{ application_name }} app host agent makes it immediately available.
 2. Remote management solutions can be used to start the agent.
 3. The startup task is then also enabled on the operating system.
-4. On subsequent logins, the {{ application_name }} app background agent starts automatically, as expected.
+4. On subsequent logins, the {{ application_name }} app host agent starts automatically, as expected.
 
-## Using Intune to run the {{ application_name }} app background agent
+## Using Intune to run the {{ application_name }} app host agent
 
 The contents of the script can be far more elaborate, but for the purposes of this guide the following is enough:
 
 ```powershell
-Write-Output "Starting the Ubuntu Pro app background agent remotely from Intune"
+Write-Output "Starting the Ubuntu Pro host agent remotely from Intune"
 ubuntu-pro-agent.exe
 ```
 **Make sure to save that as UTF-8**, as required by Intune.
@@ -71,7 +71,7 @@ groups encompassing the users that must receive and run the script.
 
 You can then monitor the execution of this script in the Intune Admin Center.
 
-When the selected users log in to their devices, Intune will eventually start the {{ application_name }} app background agent. A terminal window
+When the selected users log in to their devices, Intune will eventually start the {{ application_name }} app host agent. A terminal window
 will appear to the user showing its regular outputs. This will only happen once.
 
 ## Remarks

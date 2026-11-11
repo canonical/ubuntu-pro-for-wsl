@@ -2,10 +2,10 @@
 myst:
   html_meta:
     "description lang=en":
-      "Use Landscape to enforce startup of the Ubuntu Pro app background agent to support zero-touch deployment at scale."
+      "Use Landscape to enforce startup of the Ubuntu Pro host agent to support zero-touch deployment at scale."
 ---
 
-# Remotely enforce startup of the {{ application_name }} app background agent using the Windows Registry
+# Remotely enforce startup of the {{ application_name }} app host agent using the Windows Registry
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
@@ -19,7 +19,7 @@ operating system when the user interacts with the application for the first time
 end-users it presents a source of friction for deployments at scale, when system administrators expect zero-touch
 deployment of the {{ application_name }} app to just work.
 
-This guide shows how sysadmins can use the Windows Registry to enforce the enablement of the {{ application_name }} app background agent
+This guide shows how sysadmins can use the Windows Registry to enforce the enablement of the {{ application_name }} app host agent
 startup task without depending on end-user interaction. While this guide uses
 [Intune](https://learn.microsoft.com/en-us/mem/intune/fundamentals/what-is-intune), it should be reproducible with any
 remote management solution capable of deploying MS Store (or MSIX-packaged) applications and registry keys.
@@ -51,7 +51,7 @@ Intune, you can deploy these script packages and monitor reports of their effect
 [Visit the Microsoft Intune documentation](https://learn.microsoft.com/en-us/mem/intune/fundamentals/remediations)
 to learn more. Those scripts run on a predefined schedule and if the detection script reports a failure (by
 `exit 1`) then the remediation script will run. That allows system administrators to watch for the specific Registry
-key value that represents the enablement of the {{ application_name }} app background agent startup task. The contents of both scripts are
+key value that represents the enablement of the {{ application_name }} app host agent startup task. The contents of both scripts are
 presented below. **Make sure to save them encoded in UTF-8**, as required by Intune.
 
 ### Detection script

@@ -47,7 +47,7 @@ This section contains settings used by both clients. Most keys in this section b
 
 ```{warning}
 The certificate referred to by the `ssl_public_key` key is used for both the
-Landscape client inside the WSL instances as well as the Windows background agent.
+Landscape client inside the WSL instances as well as the host agent.
 Until version 0.1.15 of the {{ application_name }} app, the app explicitly requires referencing a path
 to the SSL certificate on a Windows host machine.
 Newer versions completely follow the Windows OS certificate stores, only requiring reference

@@ -285,7 +285,7 @@ installed on Windows if it's signed by a trusted source. Even when downloading t
 releases or from the Canonical website, the binary package is signed by Microsoft Store, thus no
 security exceptions are required when installing the application.
 
-At runtime, the Windows background agent communicates with the WSL Pro Service within the instances of Ubuntu on
+At runtime, the host agent communicates with the WSL Pro Service within the instances of Ubuntu on
 WSL through mutual TLS. Even though the network is local, virtual and private, data in flux is
 always encrypted. During startup, the agent creates self-signed certificates (removing previously
 existing ones) that are used to ensure data is encrypted in both directions.
