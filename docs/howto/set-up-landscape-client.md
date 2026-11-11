@@ -92,7 +92,7 @@ already provided.
 `````
 
 ```{warning}
-Until version 0.1.15 of the Ubuntu Pro app, the app explicitly requires referencing a path
+Until version 0.1.15 of the {{ application_name }} app, the app explicitly requires referencing a path
 to the SSL certificate on a Windows host machine.
 Newer versions completely follow the Windows OS certificate stores, only requiring reference
 to that certificate if the machine running the Landscape server is not trusted on your network.
