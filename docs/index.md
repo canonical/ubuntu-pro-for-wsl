@@ -7,7 +7,7 @@ myst:
 
 # Ubuntu on WSL
 
-Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) enables
+Windows Subsystem for Linux ([WSL](https://ubuntu.com/wsl)) enables
 developers to run a GNU/Linux environment on Windows. The Ubuntu distribution
 for WSL is tightly integrated with the Windows OS, supporting features
 including remote development with popular IDEs and cross-OS file management.

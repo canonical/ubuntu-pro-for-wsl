@@ -1,5 +1,5 @@
 ---
-relatedlinks: "[Download&#32;Pro&#32;for&#32;WSL&#32;from&#32;ubuntu.com](https://www.ubuntu.com/desktop/wsl)"
+relatedlinks: "[Download&#32;Pro&#32;for&#32;WSL&#32;from&#32;ubuntu.com](https://www.ubuntu.com/wsl)"
 myst:
   html_meta:
     "description lang=en":
@@ -26,7 +26,7 @@ The {{ application_name }} app can be installed from the Ubuntu website, the Mic
 
 `````{tab-set}
 ````{tab-item} Ubuntu website
-Go to [ubuntu.com/desktop/wsl](https://ubuntu.com/desktop/wsl).
+Go to [ubuntu.com/wsl](https://ubuntu.com/wsl).
 
 Click {guilabel}`Download the Ubuntu Pro for WSL app`. The external button may retain the former name until the website is updated.
 

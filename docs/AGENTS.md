@@ -146,7 +146,7 @@ Optionally add a `relatedlinks` front matter entry to surface relevant external 
 
 ```text
 ---
-relatedlinks: "[Download&#32;Pro&#32;for&#32;WSL](https://www.ubuntu.com/desktop/wsl)"
+relatedlinks: "[Download&#32;Pro&#32;for&#32;WSL](https://www.ubuntu.com/wsl)"
 ---
 ```
 

@@ -1,5 +1,5 @@
 ---
-relatedlinks: "[Download&#32;Pro&#32;for&#32;WSL&#32;from&#32;ubuntu.com](https://www.ubuntu.com/desktop/wsl)"
+relatedlinks: "[Download&#32;Pro&#32;for&#32;WSL&#32;from&#32;ubuntu.com](https://www.ubuntu.com/wsl)"
 myst:
   html_meta:
     "description lang=en":
@@ -14,7 +14,7 @@ myst:
     :end-before: <!-- Include end pro -->
 ```
 
-Windows Subsystem for Linux ([WSL](https://ubuntu.com/desktop/wsl)) is an easy and fast way to run Ubuntu on a Windows machine.
+Windows Subsystem for Linux ([WSL](https://ubuntu.com/wsl)) is an easy and fast way to run Ubuntu on a Windows machine.
 The {{ application_name }} app (formerly Ubuntu Pro for WSL) automates attachment of Ubuntu
 instances on WSL to your [Ubuntu Pro](https://ubuntu.com/pro) subscription and
 can configure Landscape. It does not replace the subscription or the Ubuntu Pro
@@ -154,7 +154,7 @@ Once you have a token you are ready to install the {{ application_name }} app.
 (tut::get-up4w)=
 ### Install and configure the {{ application_name }} app
 
-The {{ application_name }} app can be installed from [ubuntu.com/desktop/wsl](https://ubuntu.com/desktop/wsl).
+The {{ application_name }} app can be installed from [ubuntu.com/wsl](https://ubuntu.com/wsl).
 
 ```{admonition} Other installation methods
 :class: tip
