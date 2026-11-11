@@ -40,7 +40,7 @@ tutorial](tut::deploy).
 In an enterprise scenario, the {{ application_name }} app enables you to automate
 Pro-attachment and Landscape-enrollment of Ubuntu instances organisation-wide.
 
-## {{ application_name }} app automates Pro-attachment
+## The {{ application_name }} app automates Pro-attachment
 
 WSL users often create multiple instances. For example, they might have an
 Ubuntu instance for web development projects and another instance for machine
@@ -85,7 +85,7 @@ managed WSL instances, refer to the [Landscape
 documentation](https://documentation.ubuntu.com/landscape/how-to-guides/wsl-integration/perform-common-tasks/).
 ```
 
-## {{ application_name }} app has a GUI interface for individual users
+## The {{ application_name }} app has a GUI interface for individual users
 
 The Windows application has a GUI interface that is convenient for adding a Pro
 subscription and entering a Landscape configuration.
@@ -96,7 +96,7 @@ small number of machines, or for the testing of the {{ application_name }} app f
 Enterprise users, especially system administrators, may wish to bypass the GUI
 completely, and instead configure the {{ application_name }} app using the {term}`Windows registry`.
 
-## {{ application_name }} app has registry keys for enterprise users
+## The {{ application_name }} app has registry keys for enterprise users
 
 Pro tokens and Landscape configurations can also be applied to machines [using
 the Windows registry](../reference/windows_registry.md). Using the registry
