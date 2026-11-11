@@ -86,9 +86,10 @@ all pages as the MyST substitution `application_name`. Renaming the application 
 there; do not hard-code the name in page content.
 
 - Write `{{ application_name }}` whenever the text refers to the application. The variable holds
-only the product name, so follow it freely with "app" or "application" when disambiguation is
-useful: `the {{ application_name }} app`, `the {{ application_name }} application`, or just `{{
-application_name }}`.
+only the product name, so follow it freely with "app" or "application" to disambiguate from the
+Ubuntu Pro subscription service, given they are currently homonymous. For example:
+`the {{ application_name }} app` or `the {{ application_name }} application`, but never just 
+`{{ application_name }}`, due the inherent ambiguity.
 - Do not use the substitution for the Ubuntu Pro subscription service itself (Pro tokens, ESM,
 attachment). Write that literally as "Ubuntu Pro". The variable is a semantic marker for the
 application, not a mechanical replacement of the string.
