@@ -6,7 +6,7 @@ myst:
 ---
 
 (ref::firewall)=
-# Firewall requirements for Ubuntu on WSL
+# Firewall requirements for the Ubuntu Pro app
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
