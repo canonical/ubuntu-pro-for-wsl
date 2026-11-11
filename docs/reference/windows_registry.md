@@ -17,7 +17,7 @@ The {term}`Windows registry` is a database provided by Windows where programs ca
 > See more:
 [Microsoft Learn | Windows registry information for advanced users](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/windows-registry-advanced-users)
 
-In the {{ application_name }} app, you can use the Windows registry to supply the configuration for Ubuntu Pro and Landscape to the [{term}`Windows agent`].
+In the {{ application_name }} app, you can use the Windows registry to supply the configuration for Ubuntu Pro and Landscape to the {term}`Windows agent`.
 
 > See more: [install the {{ application_name }} app and add a Pro token](howto::config-up4w)
 
