@@ -11,7 +11,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
 	github.com/ubuntu/decorate v0.0.0-20250213124239-8228e241ee19
-	go.yaml.in/yaml/v3 v3.0.5
+	go.yaml.in/yaml/v3 v3.0.6
 	golang.org/x/exp v0.0.0-20260527015227-08cc5374adb3
 	golang.org/x/text v0.43.0
 	google.golang.org/grpc v1.85.0
