@@ -67,11 +67,7 @@ class _SubscribeNowPageState extends State<SubscribeNowPage> {
 
     return ColumnPage(
       left: [
-        MarkdownBody(
-          data: lang.proHeading('[${lang.learnMore}](https://ubuntu.com/pro)'),
-          onTapLink: (_, href, __) => launchUrlString(href!),
-          styleSheet: linkStyle,
-        ),
+        Text(lang.proHeading),
         const SizedBox(height: 16.0),
         OutlinedButton(
           onPressed: !model.purchaseAllowed

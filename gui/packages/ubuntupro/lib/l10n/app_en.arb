@@ -32,14 +32,7 @@
     "agentStateQuerying": "Checking Ubuntu Pro background agent's state.",
     "agentStateUnreachable": "Attempting to recover Ubuntu Pro background agent.",
 
-    "proHeading": "Open source software security by the publishers of Ubuntu, now available on Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "The most comprehensive subscription for open source security and compliance, available for Ubuntu instances on Windows.",
     "getUbuntuPro": "Get Ubuntu Pro",
     "learnMore": "Learn more",
 
