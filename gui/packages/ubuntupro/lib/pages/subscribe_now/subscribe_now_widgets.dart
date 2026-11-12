@@ -9,6 +9,8 @@ import '/l10n/app_localizations.dart';
 import '/pages/widgets/delayed_text_field.dart';
 import 'subscribe_now_model.dart';
 
+const dashboardBaseUrl = 'ubuntu.com/pro/dashboard';
+
 /// A validated text field with a submit button that calls the supplied [onApply]
 /// callback with the validated Pro Token when the submit button is clicked.
 class ProTokenInputField extends StatelessWidget {
@@ -43,7 +45,7 @@ class ProTokenInputField extends StatelessWidget {
         const SizedBox(height: 8),
         MarkdownBody(
           data: lang.tokenInputDescription(
-            '[ubuntu.com/pro/dashboard](https://ubuntu.com/pro/dashboard)',
+            '[$dashboardBaseUrl](https://$dashboardBaseUrl)',
           ),
           onTapLink: (_, href, __) => launchUrlString(href!),
           styleSheet: linkStyle,
