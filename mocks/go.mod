@@ -7,7 +7,7 @@ require (
 	github.com/canonical/ubuntu-pro-for-wsl/common v0.0.0-20260824122752-d9c61076a5c5
 	github.com/canonical/ubuntu-pro-for-wsl/contractsapi v0.0.0-20260417143002-81c3beae3d8c
 	github.com/spf13/cobra v1.10.2
-	go.yaml.in/yaml/v3 v3.0.5
+	go.yaml.in/yaml/v3 v3.0.6
 	golang.org/x/exp v0.0.0-20260527015227-08cc5374adb3
 	google.golang.org/grpc v1.85.0
 )
