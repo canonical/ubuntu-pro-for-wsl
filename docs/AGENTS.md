@@ -35,8 +35,8 @@ Key files include:
 
 Do not directly edit generated reference pages:
 
-- `reference/07-windows-agent-command-line-reference.md` is generated from the `agent`'s Cobra command definitions by `go generate ./windows-agent/generate`
-- `reference/08-wsl-pro-service-command-line-reference.md` is generated from `wsl-pro-service`'s Cobra command definitions by `go generate ./wsl-pro-service/generate`
+- `reference/07-windows-agent-command-line-reference.md` is generated from the `agent`'s Cobra command definitions by `go generate -tags tools ./windows-agent/generate`
+- `reference/08-wsl-pro-service-command-line-reference.md` is generated from `wsl-pro-service`'s Cobra command definitions by `go generate -tags tools ./wsl-pro-service/generate`
 
 ## Build and check
 
@@ -79,6 +79,46 @@ The `pdf` target builds a PDF export; it requires additional system packages tha
 
 Do not make cosmetic rewrites or synonym substitutions unless the task identifies a concrete accuracy, consistency, or clarity problem.
 
+### Application name substitution
+
+The Ubuntu Pro application's name is defined once in `conf.py` (`APPLICATION_NAME`) and exposed to
+all pages as the MyST substitution `application_name`. Renaming the application is a one-line change
+there; do not hard-code the name in page content.
+
+- Write `{{ application_name }}` whenever the text refers to the application. The variable holds
+only the product name, so follow it freely with "app" or "application" to disambiguate from the
+Ubuntu Pro subscription service, given they are currently homonymous. For example:
+`the {{ application_name }} app` or `the {{ application_name }} application`, but never just 
+`{{ application_name }}`, due the inherent ambiguity.
+- Do not use the substitution for the Ubuntu Pro subscription service itself (Pro tokens, ESM,
+attachment). Write that literally as "Ubuntu Pro". The variable is a semantic marker for the
+application, not a mechanical replacement of the string.
+- When a sentence could be read as referring to the Ubuntu Pro subscription (for example near "Pro
+token" or "attach"), prefer the disambiguated form "the Ubuntu Pro app" or `` {term}`Ubuntu Pro app`
+``.
+
+Limitations to consider:
+
+- Substitutions are not expanded inside inline roles, such as `` {guilabel}`...` ``, nor inside
+other substitution values. For user-interface strings, define a substitution whose value contains
+the markup with the name spelled out, for example `"download_button": "{guilabel}`Download Ubuntu
+Pro`"`, and reference it as `{{ download_button }}`.
+- Substitutions are not expanded inside fenced code blocks or `{terminal}` blocks. This is
+intentional: commands, file contents, and program output must keep their real strings (registry
+values, installed app names, Start Menu entries).
+- Substitutions are not expanded in front matter, so `myst.html_meta` descriptions cannot use them.
+New pages must still add the description front matter by hand.
+
+Where the substitution is intentionally not used:
+
+- Historical mentions: "formerly Ubuntu Pro for WSL" introductions, version-conditional notes, and
+the glossary entries that define the former name.
+- References to the Ubuntu Pro subscription service (literal "Ubuntu Pro").
+- Generated reference pages (`reference/07-*` and `reference/08-*`); if their wording must change,
+update the generator templates in `windows-agent/generate` and `wsl-pro-service/generate`, not the
+generated files.
+- Code fences and `{terminal}` blocks, as above.
+
 ### Page structure
 
 - Use kebab-case filenames for new hand-written pages
@@ -106,7 +146,7 @@ Optionally add a `relatedlinks` front matter entry to surface relevant external 
 
 ```text
 ---
-relatedlinks: "[Download&#32;Pro&#32;for&#32;WSL](https://www.ubuntu.com/desktop/wsl)"
+relatedlinks: "[Download&#32;Pro&#32;for&#32;WSL](https://www.ubuntu.com/wsl)"
 ---
 ```
 

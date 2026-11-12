@@ -6,7 +6,7 @@ myst:
 ---
 
 (ref::landscape-config)=
-# Landscape configuration schema for Ubuntu on WSL
+# Landscape configuration schema for the Ubuntu Pro app
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
@@ -17,7 +17,7 @@ Both Landscape clients are configured via a single, plain text configuration fil
 
 The schema for this file is the same as Landscape for Ubuntu desktop or server, with a few additional keys specific to the WSL settings, which can be grouped into keys that affect just the Windows-side client and keys that affect both the Windows-side client and the Ubuntu WSL-side client(s). These additions are documented below.
 
-> See more: [Landscape | Configure Ubuntu Pro for WSL for Landscape](https://documentation.ubuntu.com/landscape/how-to-guides/wsl-integration/register-wsl-hosts/)
+> See more: [Landscape | Configure the Ubuntu Pro app for Landscape](https://documentation.ubuntu.com/landscape/how-to-guides/wsl-integration/register-wsl-hosts/)
 
 Here is an example of what the configuration looks like:
 
@@ -47,8 +47,8 @@ This section contains settings used by both clients. Most keys in this section b
 
 ```{warning}
 The certificate referred to by the `ssl_public_key` key is used for both the
-Landscape client inside the WSL instances as well as the Windows background agent.
-Until version 0.1.15 of Ubuntu Pro for WSL, the app explicitly requires referencing a path
+Landscape client inside the WSL instances as well as the host agent.
+Until version 0.1.15 of the {{ application_name }} app, the app explicitly requires referencing a path
 to the SSL certificate on a Windows host machine.
 Newer versions completely follow the Windows OS certificate stores, only requiring reference
 to that certificate if the machine running the Landscape server is not trusted on your network.

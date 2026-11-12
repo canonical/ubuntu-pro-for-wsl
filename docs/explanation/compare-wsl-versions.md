@@ -41,7 +41,7 @@ The differences between WSL 1 and WSL 2 and how it affects Ubuntu can be summari
 | Graphical application support                                         |    {bdg-danger}`No`    | {bdg-success}`Yes` |
 | [Snap](https://snapcraft.io/) support                                 |    {bdg-danger}`No`    | {bdg-success}`Yes` |
 | [cloud-init](https://cloud-init.io/) support                          |    {bdg-danger}`No`    | {bdg-success}`Yes` |
-| {term}`Ubuntu Pro for WSL` support                                    |    {bdg-danger}`No`    | {bdg-success}`Yes` |
+| {term}`Ubuntu Pro app` support                                    |    {bdg-danger}`No`    | {bdg-success}`Yes` |
 | {term}`Landscape client` support                                      |    {bdg-danger}`No`    | {bdg-success}`Yes` |
 | {term}`Ubuntu Pro client` support                                     | {bdg-warning}`Partial` | {bdg-success}`Yes` |
 
@@ -51,9 +51,9 @@ The differences between WSL 1 and WSL 2 have notable consequences for Ubuntu on 
 
 While Ubuntu works on WSL 1, the experience may be degraded relative to WSL 2. Thus, we generally recommend using WSL 2 unless you have specific requirements. For example, if you make extensive use of file interoperability between WSL and Windows, you may benefit from the better performance of WSL 1 in that specific area.
 
-### How this affects Ubuntu Pro for WSL
+### How this affects the {{ application_name }} app
 
-{term}`Pro for WSL` relies on systemd for much of its functionality, including automatic Pro attachment, so it does not support WSL 1. For the same reason, the {term}`Landscape client` tool for remote management of Ubuntu instances is also not supported on WSL 1. You can still manually attach your WSL 1 instance to [Ubuntu Pro](https://documentation.ubuntu.com/pro/) using the {term}`Ubuntu Pro client`, although some of Ubuntu Pro's features may not work on WSL 1.
+The {{ application_name }} app relies on systemd for much of its functionality, including automatic Pro attachment, so it does not support WSL 1. For the same reason, the {term}`Landscape client` tool for remote management of Ubuntu instances is also not supported on WSL 1. You can still manually attach your WSL 1 instance to [Ubuntu Pro](https://documentation.ubuntu.com/pro/) using the {term}`Ubuntu Pro client`, although some of Ubuntu Pro's features may not work on WSL 1.
 
 ### Switching WSL versions
 
