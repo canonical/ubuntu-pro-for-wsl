@@ -1,14 +1,7 @@
 {
     "agentStateStarting": "Фоновий агент Ubuntu Pro запускається.",
     "applyProToken": "Застосувати токен Pro",
-    "proHeading": "Безпека програмного забезпечення з відкритим кодом від видавців Ubuntu, тепер доступна для Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Безпека програмного забезпечення з відкритим кодом від видавців Ubuntu, тепер доступна для Windows.",
     "applyingProToken": "Застосування токена {token}",
     "@applyingProToken": {
         "placeholders": {

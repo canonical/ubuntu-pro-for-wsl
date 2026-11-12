@@ -65,14 +65,7 @@
     "@agentStateQuerying": {},
     "agentStateUnreachable": "Poging om Ubuntu Pro-achtergrondagent te herstellen.",
     "@agentStateUnreachable": {},
-    "proHeading": "Open source softwarebeveiliging door de uitgevers van Ubuntu, nu beschikbaar op Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Open source softwarebeveiliging door de uitgevers van Ubuntu, nu beschikbaar op Windows.",
     "getUbuntuPro": "Ubuntu Pro verkrijgen",
     "@getUbuntuPro": {},
     "learnMore": "Meer informatie",

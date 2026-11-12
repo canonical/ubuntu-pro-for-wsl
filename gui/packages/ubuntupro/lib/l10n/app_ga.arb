@@ -67,14 +67,7 @@
     "@agentStateQuerying": {},
     "agentStateUnreachable": "Ag iarraidh gníomhaire cúlra Ubuntu Pro a ghnóthú.",
     "@agentStateUnreachable": {},
-    "proHeading": "Slándáil bogearraí foinse oscailte ag foilsitheoirí Ubuntu, ar fáil anois ar Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Slándáil bogearraí foinse oscailte ag foilsitheoirí Ubuntu, ar fáil anois ar Windows.",
     "getUbuntuPro": "Faigh Ubuntu Pro",
     "@getUbuntuPro": {},
     "learnMore": "Foghlaim níos mó",

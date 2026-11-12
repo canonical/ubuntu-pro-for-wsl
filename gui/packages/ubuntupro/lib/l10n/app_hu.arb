@@ -35,14 +35,7 @@
     "agentStateUnknownEnv": "Az Ubuntu Pro háttérügynök állapotát nem lehet ellenőrizni. Ellenőrizze a környezeti beállításait.",
     "agentStateQuerying": "Az Ubuntu Pro háttérügynök állapotának ellenőrzése.",
     "agentStateUnreachable": "Kísérlet az Ubuntu Pro háttérügynök helyreállítására.",
-    "proHeading": "Nyílt forráskódú szoftver biztonsága az Ubuntu kiadója által, mostantól elérhető Windowson is. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Nyílt forráskódú szoftver biztonsága az Ubuntu kiadója által, mostantól elérhető Windowson is.",
     "getUbuntuPro": "Ubuntu Pro beszerzése",
     "learnMore": "Tudjon meg többet",
     "ubuntuProEnabled": "Az Ubuntu Pro engedélyezve van ezen a gépen",

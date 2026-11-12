@@ -32,14 +32,7 @@
     "agentStateUnknownEnv": "Ubuntu Pro バックグラウンドエージェントの状態を確認できません。環境設定を確認してください。",
     "agentStateQuerying": "Ubuntu Pro バックグラウンドエージェントの状態を確認中です。",
     "agentStateUnreachable": "Ubuntu Pro バックグラウンドエージェントの復旧を試みています。",
-    "proHeading": "Ubuntuの開発元による、Windowsでも使えるオープンソースソフトウェアのセキュリティ機能です。{aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Ubuntuの開発元による、Windowsでも使えるオープンソースソフトウェアのセキュリティ機能です。",
     "getUbuntuPro": "Ubuntu Proを入手",
     "learnMore": "詳細を見る",
     "ubuntuProEnabled": "このマシンでは Ubuntu Pro が有効になっています。",

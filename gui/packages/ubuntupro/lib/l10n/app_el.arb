@@ -1,14 +1,7 @@
 {
     "updatingSubscriptionInfo": "Ενημέρωση πληροφοριών του συνδρομητή.",
     "appTitle": "Ubuntu Pro",
-    "proHeading": "Το ελεύθερο λογισμικό ασφαλείας από τους κατασκευαστές του Ubuntu, τώρα και σε Windows.{aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Το ελεύθερο λογισμικό ασφαλείας από τους κατασκευαστές του Ubuntu, τώρα και σε Windows.",
     "purchaseStatusAlreadyPurchased": "Είσαστε ήδη συνδρομητής στο Pro.",
     "getUbuntuPro": "Λήψη Ubuntu Pro",
     "learnMore": "Μάθετε περισσότερα",

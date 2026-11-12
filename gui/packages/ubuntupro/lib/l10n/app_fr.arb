@@ -29,14 +29,7 @@
     "@agentStateStarting": {},
     "agentStatePingNonResponsive": "L'agent Ubuntu Pro d’arrière-plan ne répond pas.",
     "@agentStatePingNonResponsive": {},
-    "proHeading": "Logiciel de sécurité open source par les éditeurs d’Ubuntu, maintenant disponible sur Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Logiciel de sécurité open source par les éditeurs d’Ubuntu, maintenant disponible sur Windows.",
     "getUbuntuPro": "Obtenir Ubuntu Pro",
     "@getUbuntuPro": {},
     "learnMore": "En savoir plus",

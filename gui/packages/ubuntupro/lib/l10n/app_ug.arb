@@ -47,14 +47,7 @@
     "@agentStateQuerying": {},
     "agentStateUnreachable": "Ubuntu Pro ئارقا سۇپا ۋاكالەتچىسىنى ئەسلىگە كەلتۈرۈشنى سىناۋاتىدۇ.",
     "@agentStateUnreachable": {},
-    "proHeading": "Ubuntu تارقاتقۇچىنىڭ ئوچۇق كودلۇق يۇمشاق دېتال بىخەتەرلىكىنى ھازىر Windows تا ئىشلەتكىلى بولىدۇ. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Ubuntu تارقاتقۇچىنىڭ ئوچۇق كودلۇق يۇمشاق دېتال بىخەتەرلىكىنى ھازىر Windows تا ئىشلەتكىلى بولىدۇ.",
     "getUbuntuPro": "Ubuntu Pro غا ئېرىشىش",
     "@getUbuntuPro": {},
     "learnMore": "مول بىلىم",

@@ -31,14 +31,7 @@
     "agentStateUnknownEnv": "L'estat de l'agent de fons d'Ubuntu Pro no es pot verificar. Comproveu la configuració de l'entorn.",
     "agentStateQuerying": "S'està comprovant l'estat de l'agent de fons d'Ubuntu Pro.",
     "agentStateUnreachable": "S'està intentant recuperar l'agent de fons Ubuntu Pro.",
-    "proHeading": "Seguretat de programari de codi obert per part dels editors d'Ubuntu, ara disponible a Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Seguretat de programari de codi obert per part dels editors d'Ubuntu, ara disponible a Windows.",
     "getUbuntuPro": "Obtenir Ubuntu Pro",
     "learnMore": "Més informació",
     "ubuntuProEnabled": "Ubuntu Pro està habilitat en aquesta màquina",

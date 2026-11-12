@@ -31,14 +31,7 @@
     "agentStateCannotStart": "Agen latar Ubuntu Pro tidak bisa dimulai.",
     "agentStateQuerying": "Memeriksa status agen latar Ubuntu Linux Pro.",
     "agentStateUnreachable": "Mencoba memulihkan agen latar Ubuntu Pro.",
-    "proHeading": "Keamanan perangkat lunak open source oleh penerbit Ubuntu, sekarang tersedia di Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Keamanan perangkat lunak open source oleh penerbit Ubuntu, sekarang tersedia di Windows.",
     "getUbuntuPro": "Dapatkan Ubuntu Pro",
     "learnMore": "Pelajari lebih lanjut",
     "ubuntuProEnabled": "Ubuntu Pro diaktifkan pada mesin ini",

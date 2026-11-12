@@ -55,14 +55,7 @@
     "@landscapeFQDNError": {},
     "statusBarAgentRunningTooltip": "Ubuntu Pro agentprogramm töötab",
     "@statusBarAgentRunningTooltip": {},
-    "proHeading": "Avatud lähtekoodil põhinev turvatarkvara Ubuntu arendajatelt on nüüd saadaval Windowsis. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Avatud lähtekoodil põhinev turvatarkvara Ubuntu arendajatelt on nüüd saadaval Windowsis.",
     "landscapeKeyLabel": "Registreerimisvõti (kui on vaja)",
     "@landscapeKeyLabel": {},
     "statusBarAgentConnectingTooltip": "Ühendan Ubuntu Pro agentprogrammiga...",

@@ -65,14 +65,7 @@
     "@learnMore": {},
     "getUbuntuPro": "קבלת Ubuntu Pro",
     "@getUbuntuPro": {},
-    "proHeading": "אבטחת תוכנה בקוד פתוח על ידי המפיצים של אובונטו, זמינה מעתה על Windows.‏ {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "אבטחת תוכנה בקוד פתוח על ידי המפיצים של אובונטו, זמינה מעתה על Windows.‏",
     "ubuntuProEnabledInfo": "כל המופעים של אובונטו WSL יש גישה ליכולות האבטחה של Ubuntu Pro.",
     "@ubuntuProEnabledInfo": {},
     "landscapeConfigureButton": "הגדרת Lanscape",

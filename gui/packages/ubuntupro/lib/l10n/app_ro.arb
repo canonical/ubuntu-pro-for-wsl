@@ -47,14 +47,7 @@
     "@agentStateQuerying": {},
     "agentStateUnreachable": "Încercând a recupera agentul Ubuntu Pro de fundal.",
     "@agentStateUnreachable": {},
-    "proHeading": "Software de securitate open source de la editorii Ubuntu, acum disponibil pe Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Software de securitate open source de la editorii Ubuntu, acum disponibil pe Windows.",
     "getUbuntuPro": "Obține Ubuntu Pro",
     "@getUbuntuPro": {},
     "learnMore": "Află mai multe",

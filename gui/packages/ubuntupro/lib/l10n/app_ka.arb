@@ -23,14 +23,7 @@
     "@agentStatePingNonResponsive": {},
     "landscapeFileEmptyPath": "ბილიკის მითითება აუცილებელია",
     "@landscapeFileEmptyPath": {},
-    "proHeading": "ღია წყაროს მქონე პროგრამების უსაფრთხოება Ubuntu-ის გამომცემლებისგან ახლა ხელმისაწვდომია Windows-ზე. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "ღია წყაროს მქონე პროგრამების უსაფრთხოება Ubuntu-ის გამომცემლებისგან ახლა ხელმისაწვდომია Windows-ზე.",
     "agentStateUnknownEnv": "Ubuntu Pro-ის ფონური აგენტის მდგომარეობის გადამოწმება შეუძლებელია. შეამოწმეთ გარემოს პარამეტრები.",
     "@agentStateUnknownEnv": {},
     "buttonNext": "შემდეგი",

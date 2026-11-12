@@ -31,14 +31,7 @@
     "agentStateUnknownEnv": "Ubuntu Pro arka plan aracı durumu doğrulanamıyor. Ortam ayarlarınızı kontrol edin.",
     "agentStateQuerying": "Ubuntu Pro arka plan aracısının durumunu kontrol ediyorum.",
     "agentStateUnreachable": "Ubuntu Pro arka plan aracısını kurtarmaya çalışıyorum.",
-    "proHeading": "Ubuntu yayıncılarının açık kaynaklı yazılım güvenliği artık Windows'ta da mevcut. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Ubuntu yayıncılarının açık kaynaklı yazılım güvenliği artık Windows'ta da mevcut.",
     "getUbuntuPro": "Ubuntu Pro'yu edinin",
     "learnMore": "Daha fazla bilgi edin",
     "ubuntuProEnabled": "Bu makinede Ubuntu Pro etkin",

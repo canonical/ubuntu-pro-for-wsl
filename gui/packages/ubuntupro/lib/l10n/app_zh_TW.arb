@@ -41,14 +41,7 @@
     "agentStateCannotStart": "Ubuntu Pro 背景代理程式無法啟動。",
     "agentStateQuerying": "檢查 Ubuntu Pro 背景代理程式的狀態。",
     "agentStateUnreachable": "嘗試復原 Ubuntu Pro 背景代理程式。",
-    "proHeading": "由 Ubuntu 發行商提供的開放原始碼軟體安全性，現在可在 Windows 上使用。{aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "由 Ubuntu 發行商提供的開放原始碼軟體安全性，現在可在 Windows 上使用。",
     "getUbuntuPro": "取得 Ubuntu Pro",
     "learnMore": "了解更多",
     "ubuntuProEnabled": "此機器已啟用 Ubuntu Pro",

@@ -57,14 +57,7 @@
     "@agentStateQuerying": {},
     "agentStateUnreachable": "Försöker återställa Ubuntu Pro-bakgrundsagent.",
     "@agentStateUnreachable": {},
-    "proHeading": "Öppen källkodsprogramvara från utvecklarna av Ubuntu, nu tillgänglig för Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Öppen källkodsprogramvara från utvecklarna av Ubuntu, nu tillgänglig för Windows.",
     "getUbuntuPro": "Skaffa Ubuntu Pro",
     "@getUbuntuPro": {},
     "ubuntuProEnabled": "Ubuntu Pro är aktiverat på den här maskinen",
