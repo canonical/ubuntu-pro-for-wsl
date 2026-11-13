@@ -32,7 +32,7 @@
     "agentStateQuerying": "Checking Ubuntu Pro background agent's state.",
     "agentStateUnreachable": "Attempting to recover Ubuntu Pro background agent.",
 
-    "proHeading": "The most comprehensive subscription for open source security and compliance, available for Ubuntu instances on Windows.",
+    "proHeading": "The most comprehensive subscription for open source security and compliance, available for Ubuntu instances on WSL.",
     "dontHaveToken": "Don't have a token yet?",
     "getYourToken": "Get your token now",
     "getYourTokenContinuation": "30-day trial for enterprises. Always free for personal use.",
