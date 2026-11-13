@@ -31,14 +31,7 @@
     "agentStateUnknownEnv": "Ubuntu Pro atzeko planoko agentearen egoera ezin da egiaztatu. Aztertu zure inguruneko ezarpenak.",
     "agentStateQuerying": "Ubuntu Pro atzeko planoko agentearen egoera aztertzen.",
     "agentStateUnreachable": "Ubuntu Pro atzeko planoko agentea berreskuratzen saiatzen.",
-    "proHeading": "Ubunturen argitaratzaileen eskutik datorren kode irekiko softwarearen segurtasuna, orain Windowsen. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Ubunturen argitaratzaileen eskutik datorren kode irekiko softwarearen segurtasuna, orain Windowsen.",
     "getUbuntuPro": "Eskuratu Ubuntu Pro",
     "learnMore": "Informazio gehiago",
     "ubuntuProEnabled": "Ubuntu Pro gaituta dago makina honetan",

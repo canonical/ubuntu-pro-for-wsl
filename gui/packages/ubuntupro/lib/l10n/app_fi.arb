@@ -9,14 +9,7 @@
     "getUbuntuPro": "Hanki Ubuntu Pro",
     "learnMore": "Lue lisää",
     "ubuntuProEnabled": "Ubuntu Pro on käytössä tällä koneella",
-    "proHeading": "Avoimen lähdekoodin ohjelmistojen tietoturvaa Ubuntun julkaisijoiden toimesta, nyt saatavilla Windowsilla. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Avoimen lähdekoodin ohjelmistojen tietoturvaa Ubuntun julkaisijoiden toimesta, nyt saatavilla Windowsilla.",
     "ubuntuProEnabledInfo": "Kaikilla Ubuntu WSL -instansseilla on pääsy Ubuntu Pro -tietoturvaominaisuuksiin.",
     "manageUbuntuPro": "Hallitse Ubuntu Pro -tilausta",
     "detachPro": "Irrota Ubuntu Pro",

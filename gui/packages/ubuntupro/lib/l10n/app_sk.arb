@@ -5,14 +5,7 @@
     "landscapeSkipDescription": "Konfiguráciu Landscape môžete neskôr vykonať v tejto aplikácii",
     "statusBarAgentConnectingTooltip": "Pripájanie k agentovi Ubuntu Pro...",
     "agentStateUnknownEnv": "Stav agenta Ubuntu Pro na pozadí sa nedá overiť. Skontrolujte nastavenia prostredia.",
-    "proHeading": "Bezpečnosť softvéru s otvoreným zdrojovým kódom od vydavateľov Ubuntu, teraz dostupná vo Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Bezpečnosť softvéru s otvoreným zdrojovým kódom od vydavateľov Ubuntu, teraz dostupná vo Windows.",
     "landscapeHeading": "Nakonfigurujte pripojenie k Landscape na vzdialenú správu inštancií Ubuntu WSL. {landscapeLink}",
     "@landscapeHeading": {
         "placeholders": {

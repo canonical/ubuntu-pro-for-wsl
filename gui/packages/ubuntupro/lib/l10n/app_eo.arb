@@ -21,14 +21,7 @@
     "@tokenErrorInvalid": {},
     "statusBarReportBugTooltip": "Raporti cimon",
     "@statusBarReportBugTooltip": {},
-    "proHeading": "Malfermitkoda programa sekureco far la eldonantoj de Ubuntu, nun disponebla ĉe Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Malfermitkoda programa sekureco far la eldonantoj de Ubuntu, nun disponebla ĉe Windows.",
     "landscapeFQDNError": "Nevalida plene kvalifikita nomregno. Formo devas esti plene kvalifikita nomregno aŭ IP-adreso.",
     "@landscapeFQDNError": {},
     "purchaseStatusAlreadyPurchased": "Vi jam abonas Ubuntu Pro.",

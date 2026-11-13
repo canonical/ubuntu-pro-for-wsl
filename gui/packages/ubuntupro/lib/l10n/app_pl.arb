@@ -51,14 +51,7 @@
     "@agentStateQuerying": {},
     "agentStateUnreachable": "Próba odzyskania agenta w tle Ubuntu Pro.",
     "@agentStateUnreachable": {},
-    "proHeading": "Oprogramowanie zabezpieczające typu open source od wydawców Ubuntu, teraz dostępne w systemie Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Oprogramowanie zabezpieczające typu open source od wydawców Ubuntu, teraz dostępne w systemie Windows.",
     "getUbuntuPro": "Uzyskaj Ubuntu Pro",
     "@getUbuntuPro": {},
     "learnMore": "Dowiedz się więcej",

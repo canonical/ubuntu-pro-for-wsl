@@ -49,14 +49,7 @@
     "agentStateInvalid": "Wartet auf die Initialisierung des Ubuntu Pro-Hintergrundagenten.",
     "agentStateUnknownEnv": "Der Status des Ubuntu Pro-Hintergrundagenten kann nicht verifiziert werden. Überprüfen Sie Ihre Umgebungseinstellungen.",
     "agentStateQuerying": "Status des Ubuntu Pro-Hintergrundagenten wird geprüft.",
-    "proHeading": "Die Sicherheit quelloffener Software von den Herausgebern von Ubuntu, jetzt auch für Windows verfügbar. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Die Sicherheit quelloffener Software von den Herausgebern von Ubuntu, jetzt auch für Windows verfügbar.",
     "getUbuntuPro": "Ubuntu Pro erhalten",
     "learnMore": "Mehr erfahren",
     "ubuntuProEnabledInfo": "Alle Ubuntu WSL-Instanzen haben Zugriff auf die Sicherheitsfunktionen von Ubuntu Pro.",

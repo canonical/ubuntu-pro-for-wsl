@@ -39,14 +39,7 @@
     "@agentStateQuerying": {},
     "agentStateUnreachable": "உபுண்டு புரோ பின்னணி முகவரை மீட்டெடுக்க முயற்சிக்கிறது.",
     "@agentStateUnreachable": {},
-    "proHeading": "உபுண்டுவின் வெளியீட்டாளர்களின் திறந்த மூல மென்பொருள் பாதுகாப்பு, இப்போது சாளரங்களில் கிடைக்கிறது. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "உபுண்டுவின் வெளியீட்டாளர்களின் திறந்த மூல மென்பொருள் பாதுகாப்பு, இப்போது சாளரங்களில் கிடைக்கிறது.",
     "getUbuntuPro": "உபுண்டு புரோவைப் பெறுங்கள்",
     "@getUbuntuPro": {},
     "learnMore": "மேலும் அறிக",

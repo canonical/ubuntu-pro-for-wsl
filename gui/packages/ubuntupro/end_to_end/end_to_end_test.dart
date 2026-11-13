@@ -87,10 +87,7 @@ Future<void> testPurchase(WidgetTester tester) async {
 
   // The "subscribe now page" is only shown if the GUI communicates with the background agent.
   var l10n = tester.l10n<SubscribeNowPage>();
-  final button = find.text(l10n.getUbuntuPro);
-  expect(button, findsOneWidget);
-
-  await tester.tap(button);
+  await tester.tapOnText(find.textRange.ofSubstring(l10n.getYourToken));
   await tester.pumpAndSettle();
 
   // asserts that we transitioned to the store-managed status page.

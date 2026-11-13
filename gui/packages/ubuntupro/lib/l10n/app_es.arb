@@ -38,14 +38,7 @@
     "agentStatePingNonResponsive": "El agente de fondo de Ubuntu Pro no está respondiendo.",
     "agentStateUnknownEnv": "No se puede verificar el estado del agente en segundo plano de Ubuntu Pro. Verifique la configuración de su entorno.",
     "agentStateUnreachable": "Intentando recuperar el agente en segundo plano de Ubuntu Pro.",
-    "proHeading": "Seguridad de software de código abierto de los editores de Ubuntu, ahora disponible en Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Seguridad de software de código abierto de los editores de Ubuntu, ahora disponible en Windows.",
     "ubuntuProEnabled": "Ubuntu Pro está activado en esta máquina",
     "ubuntuProEnabledInfo": "Todas las instancias WSL de Ubuntu tienen acceso a características de seguridad de Ubuntu Pro.",
     "manageUbuntuPro": "Gestionar suscripción de Ubuntu Pro",

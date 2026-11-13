@@ -4,7 +4,7 @@
     "tokenErrorInvalid": "Invalid token",
     "tokenValid": "Valid token",
     "tokenInputTitle": "Attach this machine",
-    "tokenInputDescription": "Enter a token from {proLink} or your system administrator",
+    "tokenInputDescription": "Enter a token from {proLink} or your system administrator.",
     "@tokenInputDescription": {
         "placeholders": {
             "proLink": {
@@ -32,19 +32,14 @@
     "agentStateQuerying": "Checking Ubuntu Pro background agent's state.",
     "agentStateUnreachable": "Attempting to recover Ubuntu Pro background agent.",
 
-    "proHeading": "Open source software security by the publishers of Ubuntu, now available on Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
-    "getUbuntuPro": "Get Ubuntu Pro",
+    "proHeading": "The most comprehensive subscription for open source security and compliance, available for Ubuntu on WSL.",
+    "dontHaveToken": "Don't have a token yet?",
+    "getYourToken": "Get your token now",
+    "getYourTokenContinuation": "30-day free trial for enterprises. Always free for personal use.",
     "learnMore": "Learn more",
 
     "ubuntuProEnabled": "Ubuntu Pro is enabled on this machine",
-    "ubuntuProEnabledInfo": "All Ubuntu WSL instances have access to Ubuntu Pro security features.",
+    "ubuntuProEnabledInfo": "All instances of Ubuntu on WSL instances have access to Ubuntu Pro security features.",
     "manageUbuntuPro": "Manage Ubuntu Pro subscription",
     "detachPro": "Detach Ubuntu Pro",
 

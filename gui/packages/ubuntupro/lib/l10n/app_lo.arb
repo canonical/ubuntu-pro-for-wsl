@@ -47,14 +47,7 @@
     "@agentStateQuerying": {},
     "agentStateUnreachable": "ກຳລັງພະຍາຍາມກູ້ຄືນ Agent ເບື້ອງຫຼັງຂອງ Ubuntu Pro.",
     "@agentStateUnreachable": {},
-    "proHeading": "ຄວາມປອດໄພຂອງຊອບແວໂອເພນຊອດໂດຍຜູ້ຈັດພິມ Ubuntu, ຕອນນີ້ໃຊ້ໄດ້ແລ້ວໃນ Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "ຄວາມປອດໄພຂອງຊອບແວໂອເພນຊອດໂດຍຜູ້ຈັດພິມ Ubuntu, ຕອນນີ້ໃຊ້ໄດ້ແລ້ວໃນ Windows.",
     "getUbuntuPro": "ຮັບເອົາ Ubuntu Pro",
     "@getUbuntuPro": {},
     "learnMore": "ຮຽນຮູ້ເພີ່ມເຕີມ",

@@ -3,11 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:yaru/yaru.dart';
 
 import '/core/pro_token.dart';
 import '/l10n/app_localizations.dart';
 import '/pages/widgets/delayed_text_field.dart';
 import 'subscribe_now_model.dart';
+
+const dashboardBaseUrl = 'ubuntu.com/pro/dashboard';
 
 /// A validated text field with a submit button that calls the supplied [onApply]
 /// callback with the validated Pro Token when the submit button is clicked.
@@ -27,11 +30,10 @@ class ProTokenInputField extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final linkStyle = MarkdownStyleSheet.fromTheme(
-      theme.copyWith(
-        textTheme: theme.textTheme.copyWith(
-          bodyMedium: theme.textTheme.bodyMedium,
-        ),
+    final linkStyle = MarkdownStyleSheet(
+      a: TextStyle(
+        color: YaruColors.of(context).link,
+        decoration: TextDecoration.underline,
       ),
     );
     final model = context.watch<SubscribeNowModel>();
@@ -43,7 +45,7 @@ class ProTokenInputField extends StatelessWidget {
         const SizedBox(height: 8),
         MarkdownBody(
           data: lang.tokenInputDescription(
-            '[ubuntu.com/pro/dashboard](https://ubuntu.com/pro/dashboard)',
+            '[$dashboardBaseUrl](https://$dashboardBaseUrl)',
           ),
           onTapLink: (_, href, __) => launchUrlString(href!),
           styleSheet: linkStyle,

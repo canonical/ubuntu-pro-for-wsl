@@ -33,14 +33,7 @@
     "@agentStatePingNonResponsive": {},
     "purchaseStatusAlreadyPurchased": "Você já é assinante do Ubuntu Pro.",
     "@purchaseStatusAlreadyPurchased": {},
-    "proHeading": "Segurança de software de código aberto pelos editores do Ubuntu, agora disponível no Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Segurança de software de código aberto pelos editores do Ubuntu, agora disponível no Windows.",
     "agentStateUnreachable": "Tentando recuperar o agente em segundo plano do Ubuntu Pro.",
     "@agentStateUnreachable": {},
     "manageUbuntuPro": "Gerencie a assinatura do Ubuntu Pro",

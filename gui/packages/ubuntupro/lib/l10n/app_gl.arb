@@ -31,14 +31,7 @@
     "agentStateUnknownEnv": "Non se pode verificar o estado do axente en segundo plano de Ubuntu Pro. Comprobe a configuración do seu entorno.",
     "agentStateQuerying": "Comprobando o estado do axente en segundo plano de Ubuntu Pro.",
     "agentStateUnreachable": "Tentando recuperar o axente en segundo plano de Ubuntu Pro.",
-    "proHeading": "Seguranza do software de código aberto dos editores de Ubuntu, agora dispoñíbel en Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Seguranza do software de código aberto dos editores de Ubuntu, agora dispoñíbel en Windows.",
     "getUbuntuPro": "Obtén Ubuntu Pro",
     "ubuntuProEnabledInfo": "Todas as instancias de Ubuntu WSL teñen acceso ás funcionalidades de seguranza de Ubuntu Pro.",
     "manageUbuntuPro": "Xestionar a subscripción Ubuntu Pro",

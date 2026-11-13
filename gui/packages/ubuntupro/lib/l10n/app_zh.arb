@@ -48,14 +48,7 @@
     },
     "agent": "Ubuntu Pro后台代理",
     "agentStateStarting": "Ubuntu Pro 后台代理正在启动。",
-    "proHeading": "来自 Ubuntu 发布者的开源软件安全，现于 Windows 上可用。{aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "来自 Ubuntu 发布者的开源软件安全，现于 Windows 上可用。",
     "getUbuntuPro": "获取 Ubuntu Pro",
     "learnMore": "了解更多",
     "ubuntuProEnabled": "Ubuntu Pro 已在此机器上启用",
