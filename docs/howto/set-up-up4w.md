@@ -28,7 +28,7 @@ The {{ application_name }} app can be installed from the Ubuntu website, the Mic
 ````{tab-item} Ubuntu website
 Go to [ubuntu.com/wsl](https://ubuntu.com/wsl).
 
-Click {guilabel}`Download the Ubuntu Pro app`.
+Select the download button for the {{ application_name }} app.
 
 Run the downloaded installer.
 ````
