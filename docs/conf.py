@@ -202,7 +202,7 @@ rediraffe_dir_only = True
 # <first sentence of home page>".
 llms_txt_description = textwrap.dedent(
     """\
-    This is the documentation for Ubuntu on WSL, the default Linux distribution for WSL, and the Pro for WSL application for managing and securing instances of Ubuntu on WSL.
+    This is the documentation for Ubuntu on WSL, the default Linux distribution for WSL, and the Ubuntu Pro app for managing and securing instances of Ubuntu on WSL.
     """
 )
 
@@ -245,6 +245,17 @@ linkcheck_retries = 3
 # Configuration extras #
 ########################
 
+# Canonical application name; see docs/internal/domain.md.
+#
+# APPLICATION_NAME is the single source of truth for the application's name.
+# It is exposed to every MyST page as the `application_name` substitution, so
+# renaming the application is a one-line change here. In prose, use
+# {{ application_name }} whenever referring to the application; "app" or
+# "application" may follow it freely when disambiguation is needed. Do NOT use
+# the substitution for the Ubuntu Pro subscription service itself (Pro tokens,
+# ESM attachment, etc.); write that literally as "Ubuntu Pro".
+APPLICATION_NAME = "Ubuntu Pro"
+
 # Custom MyST syntax extensions; see
 # https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
 # NOTE: By default, the following MyST extensions are enabled:
@@ -252,6 +263,13 @@ linkcheck_retries = 3
 #   - deflist
 #   - linkify
 myst_enable_extensions = set({"colon_fence"})
+
+# MyST substitution variables; see docs/AGENTS.md for usage rules and the
+# documented limitations (inline roles, code fences, and frontmatter are not
+# expanded).
+myst_substitutions = {
+    "application_name": APPLICATION_NAME,
+}
 
 # Custom Sphinx extensions; see
 # https://www.sphinx-doc.org/en/master/usage/extensions/index.html

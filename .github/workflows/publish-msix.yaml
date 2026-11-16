@@ -124,7 +124,7 @@ jobs:
 
           # Outputs as expected by the App Installer file.
           .\build.ps1 Pack -Manifest "$PWD/dist/Package.appxmanifest" -InputFolders "$PWD/dist/x64","$PWD/dist/arm64" `
-              -Output UbuntuProForWSL.msixbundle -Cert "$PWD/certificate/certificate.pfx" -CertPass $certPass
+              -Output UbuntuPro.msixbundle -Cert "$PWD/certificate/certificate.pfx" -CertPass $certPass
 
           if ($LASTEXITCODE -ne 0) { throw "build.ps1 Pack failed" }
 

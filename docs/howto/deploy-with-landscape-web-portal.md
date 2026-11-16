@@ -1,20 +1,20 @@
 ---
-relatedlinks: "[Download&#32;Pro&#32;for&#32;WSL&#32;from&#32;ubuntu.com](https://www.ubuntu.com/desktop/wsl)"
+relatedlinks: "[Download&#32;Pro&#32;for&#32;WSL&#32;from&#32;ubuntu.com](https://www.ubuntu.com/wsl)"
 myst:
   html_meta:
     "description lang=en":
-      "Use the Ubuntu Pro for WSL application to deploy Ubuntu on WSL to remote Windows machines from a Landscape server."
+      "Use the Ubuntu Pro app to deploy Ubuntu on WSL to remote Windows machines from a Landscape server."
 ---
 
 (tut::deploy)=
-# Deploy WSL instances remotely with Ubuntu Pro for WSL and Landscape
+# Deploy WSL instances remotely with the {{ application_name }} app and Landscape
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
     :end-before: <!-- Include end pro -->
 ```
 
-This guide shows you how to use Ubuntu Pro for WSL and Landscape
+This guide shows you how to use the {{ application_name }} application and Landscape
 to deploy Ubuntu to remote Windows machines using {term}`Landscape`.
 
 It uses the Landscape web portal for deployment. If you want to know about
@@ -26,12 +26,12 @@ using the Landscape API, we have a [guide](howto::landscape-api) for that too.
 * A minimum of 16GB RAM and 8-core processor
 * The latest version of Landscape Server set up and configured on a physical or virtual machine
 * WSL installed and configured on Windows
-* The Pro for WSL app installed and configured with a Pro token
+* The {{ application_name }} app installed and configured with a Pro token
 
 ```{tip}
 It is recommended that you complete the [getting
 started](tut::up4w) tutorial to familiarise yourself with
-installation and configuration of the Pro for WSL app.
+installation and configuration of the {{ application_name }} app.
 ```
 
 ### WSL must be installed and configured
@@ -115,9 +115,9 @@ documentation](https://documentation.ubuntu.com/landscape/how-to-guides/landscap
 additional installation options.
 
 (tut::config-landscape-up4w)=
-## Configure Landscape in the Ubuntu Pro for WSL app
+## Configure Landscape in the {{ application_name }} app
 
-Open the Pro for WSL app, enter your Pro token and continue to the Landscape configuration screen.
+Open the {{ application_name }} app, enter your Pro token and continue to the Landscape configuration screen.
 
 Choose your preferred configuration option and enter the required details.
 If you choose Manual configuration, you only require the FQDN of your Landscape server.
@@ -129,7 +129,7 @@ and the account name from the Landscape web portal.
 
 When you continue, a status screen will confirm that your configuration is complete.
 
-> A dedicated how-to guide on configuring Landscape with Pro for WSL can be found [here](../howto/set-up-landscape-client).
+> A dedicated how-to guide on configuring Landscape with the {{ application_name }} app can be found [here](../howto/set-up-landscape-client).
 
 ## Register the Windows host instance with Landscape
 
@@ -273,7 +273,7 @@ nvidia-smi
 +---------------------------------------------------------------------------+
 ```
 
-Finally, run `pro status`, to confirm that Pro for WSL has automatically Pro-attached the Ubuntu instance.
+Finally, run `pro status`, to confirm that the {{ application_name }} app has automatically Pro-attached the Ubuntu instance.
 
 ````{dropdown} Deleting the deployed instance and restoring any backups
 :icon: undo
@@ -313,4 +313,4 @@ You can then launch the distro as before.
 
 Our documentation includes several [how-to guides](../howto/index)
 for completing specific tasks and [reference](../reference/index) material
-describing key information relating to Pro for WSL.
+describing key information relating to the {{ application_name }} app.

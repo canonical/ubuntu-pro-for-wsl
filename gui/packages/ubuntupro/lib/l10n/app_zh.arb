@@ -31,7 +31,7 @@
     "purchaseStatusUnknown": "在购买订阅的过程中出现未知错误。请考虑重新启动此应用。",
     "landscapeFileTooLarge": "配置文件过大",
     "landscapeSetupCustomHint": "加载自定义 Landscape 客户端配置文件",
-    "appTitle": "适用于 WSL 的 Ubuntu Pro",
+    "appTitle": "Ubuntu Pro",
     "tokenErrorEmpty": "令牌不能为空",
     "tokenErrorInvalid": "无效令牌",
     "tokenValid": "令牌有效",
@@ -48,14 +48,7 @@
     },
     "agent": "Ubuntu Pro后台代理",
     "agentStateStarting": "Ubuntu Pro 后台代理正在启动。",
-    "proHeading": "来自 Ubuntu 发布者的开源软件安全，现于 Windows 上可用。{aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "来自 Ubuntu 发布者的开源软件安全，现于 Windows 上可用。",
     "getUbuntuPro": "获取 Ubuntu Pro",
     "learnMore": "了解更多",
     "ubuntuProEnabled": "Ubuntu Pro 已在此机器上启用",

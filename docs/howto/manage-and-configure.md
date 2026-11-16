@@ -16,7 +16,7 @@ This page includes guidance on managing {term}`instances <instance>` of Ubuntu o
 We provide a reference for instance configuration to support quick lookup of
 configuration methods, including: [WSL Settings](ref::wsl-settings),
 [`.wslconfig`](ref::.wslconfig), [`wsl.conf`](ref::wsl.conf),
-[Cloud-init](ref::cloud-init), and [Ubuntu Pro for WSL](ref::up4w):
+[Cloud-init](ref::cloud-init), and [{{ application_name }} app](ref::up4w):
 
 * [WSL instance configuration reference](ref::instance-config)
 

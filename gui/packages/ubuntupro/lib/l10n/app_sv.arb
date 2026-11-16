@@ -15,7 +15,7 @@
     "@statusBarAgentConnectingTooltip": {},
     "updatingSubscriptionInfo": "Uppdaterar abonnemangsinformation.",
     "@updatingSubscriptionInfo": {},
-    "appTitle": "Ubuntu Pro för WSL",
+    "appTitle": "Ubuntu Pro",
     "@appTitle": {},
     "tokenErrorEmpty": "Token får inte vara tom",
     "@tokenErrorEmpty": {},
@@ -57,14 +57,7 @@
     "@agentStateQuerying": {},
     "agentStateUnreachable": "Försöker återställa Ubuntu Pro-bakgrundsagent.",
     "@agentStateUnreachable": {},
-    "proHeading": "Öppen källkodsprogramvara från utvecklarna av Ubuntu, nu tillgänglig för Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Öppen källkodsprogramvara från utvecklarna av Ubuntu, nu tillgänglig för Windows.",
     "getUbuntuPro": "Skaffa Ubuntu Pro",
     "@getUbuntuPro": {},
     "ubuntuProEnabled": "Ubuntu Pro är aktiverat på den här maskinen",

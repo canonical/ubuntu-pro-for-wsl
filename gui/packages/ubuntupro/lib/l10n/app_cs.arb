@@ -1,18 +1,11 @@
 {
-    "appTitle": "Ubuntu Pro pro WSL",
+    "appTitle": "Ubuntu Pro",
     "statusBarAgentConnectingTooltip": "Připojování k agentu Ubuntu Pro…",
     "agentStateInvalid": "Čeká se na inicializaci agenta pro Ubuntu Pro (na pozadí).",
     "landscapeFQDNLabel": "Landscape FQDN",
     "agentStateQuerying": "Kontrola stavu agenta pro Ubuntu Pro (na pozadí).",
     "statusBarReportBugTooltip": "Nahlásit chybu",
-    "proHeading": "Zabezpečení softwaru s otevřeným zdrojovým kódem od vydavatelů Ubuntu, nyní dostupné pro Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Zabezpečení softwaru s otevřeným zdrojovým kódem od vydavatelů Ubuntu, nyní dostupné pro Windows.",
     "purchaseStatusServer": "Něco se pokazilo v Microsoft Store. Zkuste to znovu později.",
     "landscapeHeading": "Nastavte připojení k Landscape pro vzdálenou správu instancí WSL Ubuntu. {landscapeLink}",
     "@landscapeHeading": {

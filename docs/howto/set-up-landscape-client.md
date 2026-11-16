@@ -2,10 +2,10 @@
 myst:
   html_meta:
     "description lang=en":
-      "The Landscape client in Ubuntu on WSL instances can be configured with Ubuntu Pro for WSL to support remote management and deployment."
+      "The Landscape client in Ubuntu on WSL instances can be configured with the Ubuntu Pro app to support remote management and deployment."
 ---
 
-# Configure the Landscape client with Ubuntu Pro for WSL
+# Configure the Landscape client with the {{ application_name }} application
 
 ```{include} ../includes/pro_content_notice.txt
     :start-after: <!-- Include start pro -->
@@ -26,7 +26,7 @@ The {term}`Landscape client` can be configured in two ways:
 
 ## Access the registry
 
-First, ensure that Ubuntu Pro for WSL has run at least once after installation.
+First, ensure that the {{ application_name }} app has run at least once after installation.
 This guarantees that the key and values necessary for configuration will be set up
 in the registry.
 
@@ -56,9 +56,9 @@ automatically Pro-attaching WSL instances through Landscape.
 ````
 
 ````{tab-item} Configure with the graphical interface
-In the Pro for WSL app navigate to the Landscape configuration screen:
+In the {{ application_name }} app navigate to the Landscape configuration screen:
 
-![Main screen of the Pro for WSL GUI](../assets/landscape-config-ui.png)
+![Main screen of the {{ application_name }} app GUI](../assets/landscape-config-ui.png)
 
 Choose your preferred configuration option and enter the required details.
 
@@ -92,7 +92,7 @@ already provided.
 `````
 
 ```{warning}
-Until version 0.1.15 of Ubuntu Pro for WSL, the app explicitly requires referencing a path
+Until version 0.1.15 of the {{ application_name }} app, the app explicitly requires referencing a path
 to the SSL certificate on a Windows host machine.
 Newer versions completely follow the Windows OS certificate stores, only requiring reference
 to that certificate if the machine running the Landscape server is not trusted on your network.
@@ -104,7 +104,7 @@ This can be copied to a Windows machine:
 
 > C:\Users\\\<username>\landscape_server.pem
 
-The path can then be referenced during Landscape configuration in the Pro for WSL app.
+The path can then be referenced during Landscape configuration in the {{ application_name }} app.
 ```
 
 (howto::config-landscape-client)=

@@ -10,7 +10,7 @@
     "agentStateInvalid": "Ожидание инициализации Фонового агента Ubuntu Pro.",
     "purchaseStatusAlreadyPurchased": "Вы уже подписаны на Pro.",
     "agentStateUnknownEnv": "Состояние Фонового агента Ubuntu Pro не может быть проверено. Проверьте настройки среды.",
-    "appTitle": "Ubuntu Pro для WSL",
+    "appTitle": "Ubuntu Pro",
     "landscapeFQDNError": "Недопустимое FQDN. Ожидается полное доменное имя или IP-адрес.",
     "statusBarAgentDownTooltip": "Агент Ubuntu Pro отключен. Нажмите для запуска агента.",
     "tokenInputTitle": "Привязать эту машину",
@@ -31,14 +31,7 @@
             }
         }
     },
-    "proHeading": "Программное обеспечение безопасности с открытым исходным кодом от издателей Ubuntu, теперь доступно и для Windows. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Программное обеспечение безопасности с открытым исходным кодом от издателей Ubuntu, теперь доступно и для Windows.",
     "purchaseStatusNetwork": "Проблема с сетью не позволила совершить покупку. Пожалуйста, повторите попытку после подключения.",
     "tokenErrorEmpty": "Токен не может быть пустым",
     "tokenErrorInvalid": "Неверный токен",

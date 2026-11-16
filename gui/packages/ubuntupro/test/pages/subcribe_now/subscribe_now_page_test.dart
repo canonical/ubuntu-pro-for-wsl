@@ -10,6 +10,7 @@ import 'package:ubuntupro/core/agent_api_client.dart';
 import 'package:ubuntupro/l10n/app_localizations.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_model.dart';
 import 'package:ubuntupro/pages/subscribe_now/subscribe_now_page.dart';
+import 'package:ubuntupro/pages/subscribe_now/subscribe_now_widgets.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 import 'package:wizard_router/wizard_router.dart';
 import 'package:yaru_test/yaru_test.dart';
@@ -22,7 +23,7 @@ import 'subscribe_now_page_test.mocks.dart';
 @GenerateMocks([AgentApiClient, P4wMsStore])
 void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
-  // TODO: Sometimes the Column in the LandscapePage extends past the test environment's screen
+  // TODO: Sometimes the Column in the pages extends past the test environment's screen
   // due differences in font size between production and testing environments.
   // This should be resolved so that we don't have to specify a manual text scale factor.
   // See more: https://github.com/flutter/flutter/issues/108726#issuecomment-1205035859
@@ -38,11 +39,11 @@ void main() {
 
     final app = buildApp(model, onSubscribeNoop);
     await tester.pumpWidget(app);
-    final context = tester.element(find.byType(SubscribeNowPage));
-    final lang = AppLocalizations.of(context);
 
     expect(launcher.launched, isFalse);
-    await tester.tapOnText(find.textRange.ofSubstring(lang.learnMore));
+    await tester.tapOnText(
+      find.textRange.ofSubstring(dashboardBaseUrl),
+    );
     await tester.pump();
     expect(launcher.launched, isTrue);
   });
@@ -61,7 +62,7 @@ void main() {
     final lang = AppLocalizations.of(context);
 
     expect(launcher.launched, isFalse);
-    await tester.tap(find.button(lang.getUbuntuPro));
+    await tester.tapOnText(find.textRange.ofSubstring(lang.getYourToken));
     await tester.pumpAndSettle();
     expect(launcher.launched, isTrue);
   });
@@ -90,8 +91,7 @@ void main() {
       final lang = AppLocalizations.of(context);
 
       expect(called, isFalse);
-      final button = find.text(lang.getUbuntuPro);
-      await tester.tap(button);
+      await tester.tapOnText(find.textRange.ofSubstring(lang.getYourToken));
       await tester.pump();
       expect(called, isTrue);
     });
@@ -117,8 +117,7 @@ void main() {
       final lang = AppLocalizations.of(context);
 
       expect(called, isFalse);
-      final button = find.text(lang.getUbuntuPro);
-      await tester.tap(button);
+      await tester.tapOnText(find.textRange.ofSubstring(lang.getYourToken));
       await tester.pump();
       expect(find.byType(SnackBar), findsWidgets);
       expect(find.text(purchaseError.localize(lang)), findsWidgets);

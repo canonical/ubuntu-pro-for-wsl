@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:ubuntu_service/ubuntu_service.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:wizard_router/wizard_router.dart';
+import 'package:yaru/yaru.dart';
 
 import '/core/agent_api_client.dart';
 import '/l10n/app_localizations.dart';
@@ -56,68 +57,70 @@ class _SubscribeNowPageState extends State<SubscribeNowPage> {
   Widget build(BuildContext context) {
     final model = context.watch<SubscribeNowModel>();
     final lang = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final linkStyle = MarkdownStyleSheet.fromTheme(
-      theme.copyWith(
-        textTheme: theme.textTheme.copyWith(
-          bodyMedium: theme.textTheme.bodyMedium,
-        ),
-      ),
-    );
 
     return ColumnPage(
-      left: [
-        MarkdownBody(
-          data: lang.proHeading('[${lang.learnMore}](https://ubuntu.com/pro)'),
-          onTapLink: (_, href, __) => launchUrlString(href!),
-          styleSheet: linkStyle,
-        ),
-        const SizedBox(height: 16.0),
-        OutlinedButton(
-          onPressed: !model.purchaseAllowed
-              ? () => launchUrlString('https://ubuntu.com/pro/subscribe')
-              : () async {
-                  final subs = await model.purchaseSubscription();
-
-                  // Using anything attached to the BuildContext after a suspension point might be tricky.
-                  // Better check if it's still mounted in the widget tree.
-                  if (!context.mounted) return;
-
-                  subs.fold(
-                    ifLeft: (status) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          width: 200.0,
-                          behavior: SnackBarBehavior.floating,
-                          content: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 2.0,
-                                horizontal: 16.0,
-                              ),
-                              child: Text(status.localize(lang)),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                    ifRight: widget.onSubscriptionUpdate,
-                  );
-                },
-          child: Text(lang.getUbuntuPro),
-        ),
-      ],
+      left: [Text(lang.proHeading)],
       right: [
         ProTokenInputField(
           onSubmit: model.canSubmit ? () => trySubmit(model) : null,
           controller: controller,
+        ),
+        const SizedBox(height: 12.0),
+        YaruInfoBox(
+          yaruInfoType: YaruInfoType.information,
+          title: Text(lang.dontHaveToken),
+          child: MarkdownBody(
+            data:
+                '[${lang.getYourToken}](https://ubuntu.com/pro). ${lang.getYourTokenContinuation}',
+            styleSheet: MarkdownStyleSheet(
+              a: TextStyle(
+                color: YaruColors.of(context).link,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+            onTapLink: (_, href, __) async {
+              if (!model.purchaseAllowed) {
+                await launchUrlString(href!);
+                return;
+              }
+              final subs = await model.purchaseSubscription();
+
+              // Using anything attached to the BuildContext after a suspension point might be tricky.
+              // Better check if it's still mounted in the widget tree.
+              if (!context.mounted) return;
+
+              subs.fold(
+                ifLeft: (status) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      width: 200.0,
+                      behavior: SnackBarBehavior.floating,
+                      content: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 2.0,
+                            horizontal: 16.0,
+                          ),
+                          child: Text(status.localize(lang)),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                ifRight: widget.onSubscriptionUpdate,
+              );
+            },
+          ),
         ),
       ],
       navigationRow: NavigationRow(
         showBack: false,
         onBack: null,
         onNext: model.canSubmit ? () => trySubmit(model) : null,
-        next: Text(lang.attach),
+        next: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(lang.attach),
+        ),
       ),
     );
   }

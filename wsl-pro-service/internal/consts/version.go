@@ -1,4 +1,4 @@
 package consts
 
-// Version is the version name for Ubuntu Pro for WSL.
+// Version is the version name for the Ubuntu Pro app.
 var Version = "Dev"

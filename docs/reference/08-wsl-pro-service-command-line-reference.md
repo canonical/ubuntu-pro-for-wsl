@@ -2,7 +2,7 @@
 myst:
   html_meta:
     "description lang=en":
-      "Command line reference for Ubuntu Pro for WSL's WSL Pro Service."
+      "Command line reference for the Ubuntu Pro app's WSL Pro Service."
 ---
 
 # WSL Pro Service CLI
@@ -12,7 +12,7 @@ myst:
     :end-before: <!-- Include end dev -->
 ```
 
-> See first: [Pro for WSL - {term}`WSL Pro service`]
+> See first: [Ubuntu Pro app - {term}`WSL Pro service`]
 
 ## Usage
 
@@ -24,7 +24,7 @@ WSL Pro Service
 
 ##### Synopsis
 
-WSL Pro Service connects Ubuntu Pro for WSL agent to your distro.
+WSL Pro Service connects the Ubuntu Pro host agent to child Ubuntu instances.
 
 ```
 wsl-pro-service COMMAND [flags]

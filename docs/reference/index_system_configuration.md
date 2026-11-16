@@ -1,6 +1,6 @@
 (index-system-configuration)=
 
-# Ubuntu Pro for WSL configuration
+# {{ application_name }} app configuration
 
 When configuring firewall settings, Landscape clients or the Windows registry,
 the following references may be useful:

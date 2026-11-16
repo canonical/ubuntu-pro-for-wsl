@@ -2,15 +2,15 @@
 # Copyright (C) 2023 THE ubuntu-pro'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the ubuntu-pro-for-wsl package.
 # Canonical, 2023.
-#
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: ubuntu-pro\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-03-28 14:36:24PO-Revision-Date: YEAR-MO-DA HO:"
-"MI+ZONE\n"
-"PO-Revision-Date: 2023-03-28 14:36:24PO-Revision-Date: YEAR-MO-DA HO:"
-"MI+ZONE\n"
+"HO:MI+ZONE\n"
+"PO-Revision-Date: 2023-03-28 14:36:24PO-Revision-Date: YEAR-MO-DA "
+"HO:MI+ZONE\n"
 "Last-Translator: Edu Gómez Escandell <edu.gomez.escandell@canonical.com>\n"
 "Language-Team: none\n"
 "Language: ca\n"
@@ -41,7 +41,7 @@ msgid "WSL Pro Service"
 msgstr "Servei WSL Pro"
 
 #: cmd/wsl-pro-service/service/service.go:47
-msgid "WSL Pro Service connects Ubuntu Pro for WSL agent to your distro."
+msgid "WSL Pro Service connects the Ubuntu Pro host agent to child Ubuntu instances."
 msgstr ""
 
 #: internal/daemon/daemon.go:222

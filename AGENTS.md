@@ -1,8 +1,8 @@
-# Ubuntu Pro for WSL: Guide for coding agents
+# Ubuntu Pro app: Guide for coding agents
 
 ## Description
 
-**Ubuntu Pro for WSL** is a multi component system that automates enrollment of any **Ubuntu on WSL**
+**Ubuntu Pro app** (formerly Ubuntu Pro for WSL) is a multi component application that automates enrollment of any **Ubuntu on WSL**
 instance into Canonical security and compliance services, such as Landscape and Ubuntu Pro, by
 automatically enforcing its configuration to all existing and future instances. It's made of
 components running on Ubuntu on WSL (Linux) and on the Windows host, described below:
@@ -18,7 +18,7 @@ the `agent` serving both end users and developers on testing and debugging.
 - **ubuntu-pro-agent-launcher.exe** (a.k.a. the `launcher`): An invisible Win32 window that hosts
 the `agent` under a pseudo console, allowing it to run in the background without console windows
 popping up every time it interacts with WSL via API or command line.
-- **ubuntu.com/wsl/docs**: The official documentation for Ubuntu on WSL and Pro for WSL, hosted on
+- **ubuntu.com/wsl/docs**: The official documentation for Ubuntu on WSL and the Ubuntu Pro app, hosted on
 the Ubuntu website.
 
 The source code of all those components is hosted at https://github.com/canonical/ubuntu-pro-for-wsl
@@ -55,7 +55,7 @@ as to keep an _instance_ alive, install or uninstall _instances_.
 
 To enforce Pro attachment and Landscape configuration at first boot time, we leverage `cloud-init`.
 Actions taken after first boot are mediated by `wsl-pro-service` itself.
-The `landscape-client` is configured through the Pro for WSL app, but still has the role of
+The `landscape-client` is configured through the Ubuntu Pro app, but still has the role of
 communicating with the server about the instance it is running on.
 
 ## Tech stack
@@ -87,13 +87,13 @@ cross platform manner, even if targetting only Windows**. This allows for better
 - `common/` - Go constants, logic and test helpers shared between the `agent` and `wsl-pro-service`.
 - `contractsapi/` - Canonical Contracts API client in Go used for the integration with Microsoft
      Store subscription management.
-- `docs/` - Official documentation for Ubuntu on WSL and Pro for WSL, hosted on the Ubuntu website.
+- `docs/` - Official documentation for Ubuntu on WSL and the Ubuntu Pro app, hosted on the Ubuntu website.
 - `docs/internal/` - Development documentation, like architectural decision records, domain language
      mapping and coding standards, targetting AI agents and developers, not published on the website.
 - `end-to-end/` - High level end-to-end tests in Go that exercise the entire system, installing test
      versions of the packages and asserting state on Windows and WSL instances.
 - `generate/` - Code generation support for things like Gettext-based translations in Go.
-- `gui/` - Flutter plugin and Graphical user interface for Ubuntu Pro for WSL.
+- `gui/` - Flutter plugin and Graphical user interface for the Ubuntu Pro app.
 - `img/` - Images used in the README.md file.
 - `launcher/` - C++ code for the `launcher` that hosts the `agent` under a pseudo console.
 - `mocks/` - Mock implementations of the gRPC and REST services for unit and integration testing.

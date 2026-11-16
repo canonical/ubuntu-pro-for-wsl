@@ -11,13 +11,12 @@ Build-Depends: debhelper-compat (= 13),
 Standards-Version: 4.6.2
 XS-Go-Import-Path: github.com/canonical/ubuntu-pro-for-wsl/wsl-pro-service
 Homepage: https://github.com/canonical/ubuntu-pro-for-wsl
-Description: Ubuntu Pro for WSL
- Ubuntu Pro for WSL is a set of applications to manage Ubuntu WSL instances
- to allow to:
+Description: A system service that runs inside Ubuntu child instances
+ and bridges to the Ubuntu Pro app running in the host, to:
  .
-  * grants pro-attached status to any Ubuntu instance on the device,
-  * orchestrates instances for Landscape,
-  * manages instance states (spin up/down to apply policies/patches).
+  * grant pro-attached status to any Ubuntu instance on the device,
+  * orchestrate instances for Landscape,
+  * manage instance states (spin up/down to apply policies/patches).
  .
  It bridges Ubuntu WSL instances to Ubuntu Pro.
 

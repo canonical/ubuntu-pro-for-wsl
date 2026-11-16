@@ -106,7 +106,7 @@ server time.nist.gov iburst
 ```
 
 There are lots of other options supported by `chrony`, it's outside of the scope of this document
-to cover them all. You can learn more about `chrony` and its configuration, in [chrony's official documentation](https://chrony.tuxfamily.org/documentation.html).
+to cover them all. You can learn more about `chrony` and its configuration, in [chrony's official documentation](https://chrony-project.org/documentation.html).
 
 Ubuntu 24.04 LTS and previous releases have the `systemd-timesyncd.service` unit enabled by default.
 If the default time synchronization suits your needs, you should disable that unit to avoid
@@ -134,6 +134,6 @@ You can learn more about `systemd-timesyncd` and its configuration in [systemd-t
 
 - [Issue on disabling Hyper-V implicit time sync](https://github.com/microsoft/WSL/issues/12765)
 - [Ubuntu Server documentation about chrony](https://ubuntu.com/server/docs/how-to/networking/chrony-client/)
-- [chrony official documentation](https://chrony.tuxfamily.org/documentation.html)
+- [chrony official documentation](https://chrony-project.org/documentation.html)
 - [systemd-timesyncd official documentation](https://www.freedesktop.org/software/systemd/man/latest/systemd-timesyncd.service.html)
 - [WSL2 clock skew issues mega thread](https://github.com/microsoft/WSL/issues/10006)

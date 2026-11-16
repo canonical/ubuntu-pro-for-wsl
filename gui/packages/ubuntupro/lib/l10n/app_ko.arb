@@ -19,14 +19,7 @@
     "@buttonSkip": {},
     "landscapeSSLKeyLabel": "서버 SSL 공개 키 (선택)",
     "@landscapeSSLKeyLabel": {},
-    "proHeading": "Ubuntu에서 직접 제공하는 오픈 소스 소프트웨어 보안 솔루션이 이제 Windows에서도 사용 가능합니다. {aboutLink}",
-    "@proHeading": {
-        "placeholders": {
-            "aboutLink": {
-                "type": "String"
-            }
-        }
-    },
+    "proHeading": "Ubuntu에서 직접 제공하는 오픈 소스 소프트웨어 보안 솔루션이 이제 Windows에서도 사용 가능합니다.",
     "purchaseStatusSuccess": "Ubuntu Pro를 구독해 주셔서 감사합니다.",
     "@purchaseStatusSuccess": {},
     "landscapeSetupManual": "수동 설정",
@@ -57,7 +50,7 @@
     "@landscapeSetupCustom": {},
     "agentStateQuerying": "Ubuntu Pro 백그라운드 에이전트 상태 확인 중.",
     "@agentStateQuerying": {},
-    "appTitle": "WSL용 Ubuntu Pro",
+    "appTitle": "Ubuntu Pro",
     "@appTitle": {},
     "attach": "등록",
     "@attach": {},
