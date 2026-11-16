@@ -39,7 +39,7 @@
     "learnMore": "Learn more",
 
     "ubuntuProEnabled": "Ubuntu Pro is enabled on this machine",
-    "ubuntuProEnabledInfo": "All instances of Ubuntu on WSL instances have access to Ubuntu Pro security features.",
+    "ubuntuProEnabledInfo": "All instances of Ubuntu on WSL have access to Ubuntu Pro security features.",
     "manageUbuntuPro": "Manage Ubuntu Pro subscription",
     "detachPro": "Detach Ubuntu Pro",
 
