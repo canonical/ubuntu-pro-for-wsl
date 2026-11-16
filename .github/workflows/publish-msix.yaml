@@ -134,8 +134,7 @@ jobs:
           $appinstallerFile = "$PWD/dist/x64/UbuntuProForWSL.appinstaller"
           "bundle-path=$($msixFiles[0].FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           "appinstaller-path=$appinstallerFile" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-      - name: Upload MSIX bundle (dry-run)
-        if: github.event_name == 'pull_request'
+      - name: Upload MSIX bundle
         uses: actions/upload-artifact@v7
         with:
           name: msix-bundle
