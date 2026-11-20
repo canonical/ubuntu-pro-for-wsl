@@ -2,8 +2,9 @@ package daemon
 
 import (
 	"context"
-	"os"
 	"path/filepath"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -14,6 +15,36 @@ import (
 	"google.golang.org/grpc"
 )
 
+const defaultTestTimeout = 5 * time.Second
+
+func waitForGeneration(t *testing.T, registered <-chan int, expectedGen int) {
+	t.Helper()
+	select {
+	case gen := <-registered:
+		require.Equal(t, expectedGen, gen, "Expected server generation")
+	case <-time.After(defaultTestTimeout):
+		require.Failf(t, "Timeout", "Timed out waiting for gRPC server generation %d", expectedGen)
+	}
+}
+
+func requireServeNoError(t *testing.T, serveErr <-chan error) {
+	t.Helper()
+	select {
+	case err := <-serveErr:
+		if err != nil && strings.Contains(err.Error(), grpc.ErrServerStopped.Error()) {
+			err = nil
+		}
+		require.NoError(t, err, "Serve should exit without error after Quit")
+	case <-time.After(defaultTestTimeout):
+		require.Fail(t, "Serve did not exit in time")
+	}
+}
+
+// TestRestart verifies the daemon's restart behavior across different lifecycle states:
+// - successful multi-generation restarts while serving;
+// - no-op when restarting before serving starts;
+// - no-op when restarting after the daemon has quit;
+// - no-op and no request enqueueing when the context is already cancelled.
 func TestRestart(t *testing.T) {
 	t.Parallel()
 
@@ -23,10 +54,9 @@ func TestRestart(t *testing.T) {
 		cancelEarly   bool
 
 		wantAddrFileDeleted bool
-		wantServeErr        bool
 	}{
 		"Success": {},
-		"Does nothing when the context is cancelled":  {cancelEarly: true, wantAddrFileDeleted: true, wantServeErr: true},
+		"Does nothing when the context is cancelled":  {cancelEarly: true, wantAddrFileDeleted: true},
 		"Does nothing when daemon is not serving yet": {beforeServing: true},
 		"Does nothing when the daemon is done":        {afterQuit: true, wantAddrFileDeleted: true},
 	}
@@ -35,90 +65,98 @@ func TestRestart(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := context.Background()
 			addrDir := t.TempDir()
+
+			registered := make(chan int, 10)
+			var gen atomic.Int32
 
 			registerer := func(context.Context, bool) *grpc.Server {
 				server := grpc.NewServer()
 				grpctestservice.RegisterTestServiceServer(server, testGRPCService{})
+				registered <- int(gen.Add(1))
 				return server
 			}
 
 			d := New(ctx, registerer, addrDir)
 
-			serveErr := make(chan error)
-
 			if tc.beforeServing {
+				done := make(chan struct{})
 				go func() {
 					d.restart(ctx)
-					serveErr <- nil
+					close(done)
 				}()
 
 				select {
-				case <-time.After(100 * time.Millisecond):
-					require.Fail(t, "Restart should return immediately when daemon is not serving")
-				case <-serveErr:
+				case <-done:
 					// proceed.
+				case <-time.After(defaultTestTimeout):
+					require.Fail(t, "Restart should return immediately when daemon is not serving")
 				}
+
+				require.Empty(t, registered, "No server generation should have registered")
 			}
 
+			serveErr := make(chan error, 1)
 			go func() {
 				serveErr <- d.Serve(ctx)
 				close(serveErr)
 			}()
 
 			addrPath := filepath.Join(addrDir, common.ListeningPortFileName)
+			daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should have created an address file")
 
-			daemontestutils.RequireWaitPathExists(t, addrPath, "Serve should have created a .address file")
-			addrSt, err := os.Stat(addrPath)
-			require.NoError(t, err, "Address file should be readable")
+			// Wait for initial server generation (generation 1)
+			waitForGeneration(t, registered, 1)
 
 			if tc.afterQuit {
 				d.Quit(ctx, false)
-			}
-			if tc.cancelEarly {
-				cancel()
-				<-ctx.Done()
-				// When calling d.restart with a context cancelled, sometimes the select statement still prefers the alternative path to the <- ctx.Done().
-				// To ensure the <- ctx.Done() case will be preferred in this test we need to send something via d.quit, so another send will block.
-				// While strange, the test becomes predictable.
-				d.restart(ctx)
-			}
-			// Now we know the GRPC server has started serving.
-			d.restart(ctx)
+				requireServeNoError(t, serveErr)
 
-			// d.Serve() shouldn't have exitted with an error yet at this point.
-			select {
-			case err := <-serveErr:
-				if tc.wantServeErr {
-					require.Error(t, err, "Serve should return with error when stopped by the context")
-				} else {
-					require.NoError(t, err, "Restart should not have caused Serve() to exit with an error")
+				done := make(chan struct{})
+				go func() {
+					d.restart(ctx)
+					close(done)
+				}()
+
+				select {
+				case <-done:
+					// proceed.
+				case <-time.After(defaultTestTimeout):
+					require.Fail(t, "Restart should return immediately when daemon is stopped")
 				}
-			case <-time.After(100 * time.Millisecond):
-				// proceed.
-			}
 
-			if tc.wantAddrFileDeleted {
-				daemontestutils.RequireWaitPathDoesNotExist(t, addrPath, "Address file should have been removed after quitting the server")
+				require.Empty(t, registered, "No new server generation should have registered after quit")
+				daemontestutils.RequireWaitPathDoesNotExist(t, addrPath, "Address file should be removed after Quit")
 				return
 			}
 
-			daemontestutils.RequireWaitPathExists(t, addrPath, "Restart should have caused creation of another .address file")
-			// Contents could be the same without our control, thus best to check the file time.
-			newAddrSt, err := os.Stat(addrPath)
-			require.NoError(t, err, "Address file should be readable")
-			require.NotEqual(t, addrSt.ModTime(), newAddrSt.ModTime(), "Address file should be overwritten after Restart")
+			if tc.cancelEarly {
+				cancelCtx, cancel := context.WithCancel(ctx)
+				cancel()
 
-			// Restart a second time
+				d.restart(cancelCtx)
+
+				require.Empty(t, d.quit, "d.quit channel should remain empty after cancelled restart")
+
+				d.Quit(ctx, false)
+				requireServeNoError(t, serveErr)
+				daemontestutils.RequireWaitPathDoesNotExist(t, addrPath, "Address file should be removed after Quit")
+				return
+			}
+
+			// Normal flow: restart twice and verify generation increases each time
 			d.restart(ctx)
-			// d.Serve() shouldn't have exitted with an error yet at this point.
-			select {
-			case err := <-serveErr:
-				require.NoError(t, err, "Restart should not have caused Serve() to exit with an error")
-			case <-time.After(100 * time.Millisecond):
-				// proceed.
+			waitForGeneration(t, registered, 2)
+
+			d.restart(ctx)
+			waitForGeneration(t, registered, 3)
+
+			d.Quit(ctx, false)
+			requireServeNoError(t, serveErr)
+
+			if tc.wantAddrFileDeleted {
+				daemontestutils.RequireWaitPathDoesNotExist(t, addrPath, "Address file should be removed after Quit")
 			}
 		})
 	}

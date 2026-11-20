@@ -53,6 +53,7 @@ type Registry interface {
 	// Win32 stuff: not strictly registry but not worth separating out
 	RegNotifyChangeKeyValue(k registry.Key) (registry.Event, error)
 	WaitForSingleObject(event registry.Event) error
+	SetEvent(event registry.Event) error
 	CloseEvent(ev registry.Event)
 }
 
@@ -225,7 +226,9 @@ func (s *Service) waitForSingleObject(ctx context.Context, event registry.Event)
 
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		signalErr := s.registry.SetEvent(event)
+		waitErr := <-ch
+		return errors.Join(ctx.Err(), signalErr, waitErr)
 	case err := <-ch:
 		return err
 	}

@@ -50,6 +50,11 @@ func (Windows) WaitForSingleObject(ev Event) (err error) {
 	panic("the Windows registry is not available on Linux")
 }
 
+// SetEvent triggers an event.
+func (Windows) SetEvent(ev Event) error {
+	panic("the Windows registry is not available on Linux")
+}
+
 // CloseEvent releases the event.
 func (Windows) CloseEvent(ev Event) {
 	panic("the Windows registry is not available on Linux")
