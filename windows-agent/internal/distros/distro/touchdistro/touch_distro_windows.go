@@ -57,6 +57,7 @@ func wslCmd(ctx context.Context, distroName string, args ...string) *exec.Cmd {
 	// application is not set.
 	const createNoWindow = 0x08000000
 
+	//#nosec G204 // The distro name is controlled by the caller and the WSL command arguments are fixed.
 	cmd := exec.CommandContext(ctx, "wsl.exe", append([]string{"-d", distroName, "--"}, args...)...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow:    true,
