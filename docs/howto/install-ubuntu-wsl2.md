@@ -162,7 +162,7 @@ After installation, you can open Ubuntu instances by:
 
 * Running the `wsl -d <Distro>` command in PowerShell
 * Opening the dropdown in [Windows Terminal](https://github.com/microsoft/terminal?tab=readme-ov-file#installing-and-running-windows-terminal)
-* Searching for them in the Window's search bar
+* Searching for them in the Windows search bar
 
 At any point, you can list the Ubuntu distros that you can start with `wsl -l -v`.
 
