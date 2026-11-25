@@ -176,7 +176,7 @@ For tasks related to Ubuntu on WSL:
 * View [closed issues for examples of previous contributions](https://github.com/canonical/open-documentation-academy/issues?q=is%3Aissue%20state%3Aclosed%20label%3Awsl)
 * Create a [new issue for Ubuntu on WSL in the CODA repository](https://github.com/canonical/open-documentation-academy/issues/new)
 
-You can get involved the with the CODA community through:
+You can get involved with the CODA community through:
 
 * The [discussion forum](https://discourse.ubuntu.com/c/community/open-documentation-academy/166) on the Ubuntu Community Hub
 * The [Matrix channel](https://matrix.to/#/#documentation:ubuntu.com) for interactive chat
